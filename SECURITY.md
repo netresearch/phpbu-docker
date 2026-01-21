@@ -15,18 +15,12 @@ We take security vulnerabilities seriously. If you discover a security issue, pl
 ### How to Report
 
 1. **Do NOT** create a public GitHub issue for security vulnerabilities
-2. Email security concerns to: **security@netresearch.de**
+2. Use [GitHub Security Advisories](https://github.com/netresearch/phpbu-docker/security/advisories/new) to report privately
 3. Include as much detail as possible:
    - Description of the vulnerability
    - Steps to reproduce
    - Potential impact
    - Suggested fix (if any)
-
-### Response Timeline
-
-- **Initial Response**: Within 14 days
-- **Status Update**: Within 30 days
-- **Resolution Target**: Within 90 days for critical issues
 
 ### What to Expect
 
@@ -74,5 +68,4 @@ cosign download sbom ghcr.io/netresearch/phpbu-docker:latest > sbom.spdx.json
 
 ## Security Contact
 
-- **Email**: security@netresearch.de
-- **Response SLA**: 14 days initial response
+Report vulnerabilities via [GitHub Security Advisories](https://github.com/netresearch/phpbu-docker/security/advisories/new).

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: phpbu Documentation
+    url: https://phpbu.de/documentation.html
+    about: Official phpbu documentation for configuration and usage
+  - name: Security Vulnerability
+    url: https://github.com/netresearch/phpbu-docker/security/advisories/new
+    about: Report security vulnerabilities privately via GitHub Security Advisories

@@ -6,7 +6,7 @@
 | ------- | ------------------ |
 | latest  | :white_check_mark: |
 | 6.0     | :white_check_mark: |
-| php8.4  | :white_check_mark: |
+| php8.5  | :white_check_mark: |
 
 ## Reporting a Vulnerability
 

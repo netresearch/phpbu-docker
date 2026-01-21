@@ -14,7 +14,7 @@
         }
     ],
     "require": {
-        "php": ">=8.4",
+        "php": ">=8.5",
         "phpbu/phpbu": "^6.0"
     },
     "config": {

@@ -4,7 +4,7 @@ Production-ready Docker image for [phpbu](https://phpbu.de/) - PHP Backup Utilit
 
 ## Features
 
-- PHP 8.4 with security hardening
+- PHP 8.5 with security hardening
 - Non-root container execution (UID 1000)
 - Multi-architecture support (amd64, arm64)
 - Pre-configured for MySQL, PostgreSQL, MongoDB, Redis backups
@@ -221,7 +221,7 @@ cosign verify ghcr.io/netresearch/phpbu-docker:latest \
 |-----|-------------|
 | `latest` | Latest stable release |
 | `6.0` | phpbu 6.0.x series |
-| `php8.4` | PHP 8.4 base image |
+| `php8.5` | PHP 8.5 base image |
 
 ## Contributing
 

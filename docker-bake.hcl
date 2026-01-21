@@ -15,7 +15,7 @@ variable "VERSION" {
 }
 
 variable "PHP_VERSION" {
-  default = "8.4"
+  default = "8.5"
 }
 
 # Shared configuration for all targets

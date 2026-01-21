@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.9
 #########################################
 # Base stage - minimal runtime dependencies
-FROM php:8.4-alpine AS base
+FROM php:8.5-alpine AS base
 
 # Security: Create non-root user early
 RUN addgroup -g 1000 phpbu && \

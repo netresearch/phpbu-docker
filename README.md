@@ -176,10 +176,10 @@ See the [examples/](examples/) directory for complete configuration examples:
 
 ```bash
 # Build for current platform
-docker bake dev
+docker buildx bake dev
 
 # Build for multiple platforms
-docker bake
+docker buildx bake
 ```
 
 ### Development

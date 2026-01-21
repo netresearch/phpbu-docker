@@ -23,8 +23,11 @@ jobs:
         with:
           dockerfile: Dockerfile
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Validate bake file
-        run: docker bake --print
+        run: docker buildx bake --print
 
   build:
     needs: lint
@@ -97,7 +100,7 @@ jobs:
       - name: Sign images
         if: github.event_name != 'pull_request'
         run: |
-          for tag in $(docker bake --print 2>/dev/null | jq -r '.target.phpbu.tags[]'); do
+          for tag in $(docker buildx bake --print 2>/dev/null | jq -r '.target.phpbu.tags[]'); do
             cosign sign --yes "$tag"
           done
 

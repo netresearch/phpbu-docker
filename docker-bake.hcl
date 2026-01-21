@@ -1,5 +1,5 @@
 # docker-bake.hcl - Multi-platform build configuration
-# Usage: docker bake [target]
+# Usage: docker buildx bake [target]
 # Reference: https://docs.docker.com/build/bake/
 
 variable "REGISTRY" {

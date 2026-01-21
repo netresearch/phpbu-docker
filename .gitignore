@@ -1,0 +1,5 @@
+/.idea
+/app/*
+!/app/backup.json
+!/app/composer.json
+!/app/composer.lock

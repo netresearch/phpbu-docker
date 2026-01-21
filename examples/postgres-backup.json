@@ -1,0 +1,29 @@
+{
+  "verbose": true,
+  "backups": [
+    {
+      "name": "PostgreSQL Database Backup",
+      "source": {
+        "type": "pgdump",
+        "options": {
+          "host": "adapter:env:POSTGRES_HOST",
+          "port": "adapter:env:POSTGRES_PORT",
+          "user": "adapter:env:POSTGRES_USER",
+          "password": "adapter:env:POSTGRES_PASSWORD",
+          "database": "adapter:env:POSTGRES_DB"
+        }
+      },
+      "target": {
+        "dirname": "/backup",
+        "filename": "postgres-%Y%m%d-%H%i%s.sql",
+        "compress": "gzip"
+      },
+      "cleanup": {
+        "type": "quantity",
+        "options": {
+          "amount": "10"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+# CODEOWNERS for phpbu-docker
+# These owners will be requested for review on PRs
+
+# Default owners for everything
+* @netresearch/devops
+
+# Security-sensitive files
+SECURITY.md @netresearch/security
+Dockerfile @netresearch/devops @netresearch/security
+.github/workflows/ @netresearch/devops

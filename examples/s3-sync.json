@@ -1,0 +1,37 @@
+{
+  "verbose": true,
+  "backups": [
+    {
+      "name": "Files Backup with S3 Sync",
+      "source": {
+        "type": "tar",
+        "options": {
+          "path": "/backup-files"
+        }
+      },
+      "target": {
+        "dirname": "/tmp/backup",
+        "filename": "files-%Y%m%d-%H%i%s.tar",
+        "compress": "gzip"
+      },
+      "syncs": [
+        {
+          "type": "amazons3",
+          "options": {
+            "key": "adapter:env:AWS_ACCESS_KEY_ID",
+            "secret": "adapter:env:AWS_SECRET_ACCESS_KEY",
+            "bucket": "adapter:env:AWS_S3_BUCKET",
+            "region": "adapter:env:AWS_REGION",
+            "path": "/backups"
+          }
+        }
+      ],
+      "cleanup": {
+        "type": "outdated",
+        "options": {
+          "older": "2W"
+        }
+      }
+    }
+  ]
+}

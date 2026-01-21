@@ -1,0 +1,29 @@
+# compose.yml - Modern Docker Compose format
+# Reference: https://docs.docker.com/compose/compose-file/
+
+name: phpbu
+
+services:
+  phpbu:
+    image: ghcr.io/netresearch/phpbu-docker:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      TZ: ${TZ:-UTC}
+    volumes:
+      - ./config:/app/config:ro
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777,size=64M
+
+  # Development with live reload
+  dev:
+    build:
+      context: .
+      target: build
+    volumes:
+      - ./app:/app
+    command: ["tail", "-f", "/dev/null"]

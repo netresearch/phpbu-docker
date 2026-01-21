@@ -1,0 +1,41 @@
+# Git
+.git
+.gitignore
+
+# CI/CD
+.gitlab-ci.yml
+.github
+
+# Documentation (keep README.md for context)
+*.md
+!README.md
+
+# Compose and build files
+docker-compose*.yml
+compose.yml
+docker-bake.hcl
+Makefile
+
+# Tests and docs
+tests/
+docs/
+Documentation/
+
+# Examples (not needed in image)
+examples/
+
+# Environment and secrets
+.env*
+*.log
+*.pem
+*.key
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,22 @@
+{
+    "name": "docker/backup",
+    "description": "container for backup several project sources like db, filesystem to different targets like sftp, s3 etc.",
+    "type": "project",
+    "license": "LGPL-3.0-only",
+    "authors": [
+        {
+            "name": "Tobias Hein",
+            "email": "tobias.hein@netresearch.de"
+        },
+        {
+            "name": "Norman Golatka",
+            "email": "norman.golatka@netresearch.de"
+        }
+    ],
+    "config": {
+        "bin-dir": ""
+    },
+    "require": {
+        "phpbu/phpbu": "^6.0.30"
+    }
+}

@@ -1,0 +1,29 @@
+{
+  "verbose": true,
+  "backups": [
+    {
+      "name": "MySQL Database Backup",
+      "source": {
+        "type": "mysqldump",
+        "options": {
+          "host": "adapter:env:MYSQL_HOST",
+          "port": "adapter:env:MYSQL_PORT",
+          "user": "adapter:env:MYSQL_USER",
+          "password": "adapter:env:MYSQL_PASSWORD",
+          "databases": "adapter:env:MYSQL_DATABASE"
+        }
+      },
+      "target": {
+        "dirname": "/backup",
+        "filename": "mysql-%Y%m%d-%H%i%s.sql",
+        "compress": "gzip"
+      },
+      "cleanup": {
+        "type": "quantity",
+        "options": {
+          "amount": "10"
+        }
+      }
+    }
+  ]
+}

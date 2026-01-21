@@ -4,61 +4,68 @@ Production-ready Docker image for [phpbu](https://phpbu.de/) - PHP Backup Utilit
 
 ## Features
 
-- PHP 8.5 with security hardening
-- Non-root container execution
+- PHP 8.4 with security hardening
+- Non-root container execution (UID 1000)
 - Multi-architecture support (amd64, arm64)
 - Pre-configured for MySQL, PostgreSQL, MongoDB, Redis backups
 - S3, SFTP, Dropbox sync support
-- Scheduled backup execution via cron
+- Cosign-signed images with SBOM
 - Health checks and observability
 
 ## Quick Start
 
 ```bash
 # Pull the image
-docker pull ghcr.io/sebastianfeldmann/phpbu:latest
+docker pull ghcr.io/netresearch/phpbu-docker:latest
 
 # Run a backup
 docker run --rm \
-  -v ./phpbu.xml:/app/phpbu.xml:ro \
+  -v ./backup.json:/config/backup.json:ro \
   -v ./backups:/backups \
-  ghcr.io/sebastianfeldmann/phpbu:latest
+  ghcr.io/netresearch/phpbu-docker:latest \
+  --configuration=/config/backup.json
 ```
 
 ## Usage
 
-### Basic Backup
+### Basic Backup with JSON Config
 
-Create a `phpbu.xml` configuration file:
+Create a `backup.json` configuration file:
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<phpbu xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:noNamespaceSchemaLocation="http://schema.phpbu.de/6.0/phpbu.xsd">
-  <backups>
-    <backup name="mysql-backup">
-      <source type="mysqldump">
-        <option name="host" value="mysql"/>
-        <option name="user" value="root"/>
-        <option name="password" value="secret"/>
-        <option name="databases" value="myapp"/>
-      </source>
-      <target dirname="/backups/mysql"
-              filename="dump-%Y%m%d-%H%i.sql"
-              compress="gzip"/>
-    </backup>
-  </backups>
-</phpbu>
+```json
+{
+  "verbose": true,
+  "backups": [
+    {
+      "name": "MySQL Backup",
+      "source": {
+        "type": "mysqldump",
+        "options": {
+          "host": "mysql",
+          "user": "root",
+          "password": "secret",
+          "databases": "myapp"
+        }
+      },
+      "target": {
+        "dirname": "/backups",
+        "filename": "mysql-%Y%m%d-%H%i%s.sql",
+        "compress": "gzip"
+      }
+    }
+  ]
+}
 ```
 
 Run the backup:
 
 ```bash
 docker run --rm \
-  -v ./phpbu.xml:/app/phpbu.xml:ro \
+  -v ./backup.json:/config/backup.json:ro \
   -v ./backups:/backups \
   --network myapp_network \
-  ghcr.io/sebastianfeldmann/phpbu:latest
+  ghcr.io/netresearch/phpbu-docker:latest \
+  --configuration=/config/backup.json
 ```
 
 ### Docker Compose
@@ -66,9 +73,9 @@ docker run --rm \
 ```yaml
 services:
   phpbu:
-    image: ghcr.io/sebastianfeldmann/phpbu:latest
+    image: ghcr.io/netresearch/phpbu-docker:latest
     volumes:
-      - ./phpbu.xml:/app/phpbu.xml:ro
+      - ./config:/config:ro
       - ./backups:/backups
     environment:
       - TZ=UTC
@@ -76,6 +83,7 @@ services:
       - mysql
     profiles:
       - backup
+    command: ["--configuration=/config/backup.json"]
 
   mysql:
     image: mysql:8
@@ -124,15 +132,13 @@ services:
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `TZ` | Timezone | `UTC` |
-| `PHPBU_CONFIG` | Config file path | `/app/phpbu.xml` |
 
 ### Volume Mounts
 
 | Path | Purpose |
 |------|---------|
-| `/app/phpbu.xml` | Configuration file (read-only) |
+| `/config` | Configuration files (read-only recommended) |
 | `/backups` | Backup output directory |
-| `/app/.env` | Environment variables file |
 
 ### Supported Backup Sources
 
@@ -158,86 +164,11 @@ services:
 
 ## Examples
 
-### MySQL with S3 Sync
+See the [examples/](examples/) directory for complete configuration examples:
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<phpbu xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:noNamespaceSchemaLocation="http://schema.phpbu.de/6.0/phpbu.xsd">
-  <backups>
-    <backup name="mysql-s3">
-      <source type="mysqldump">
-        <option name="host" value="mysql"/>
-        <option name="user" value="backup"/>
-        <option name="password" value="%env:MYSQL_PASSWORD%"/>
-        <option name="databases" value="production"/>
-      </source>
-      <target dirname="/backups/mysql"
-              filename="prod-%Y%m%d-%H%i.sql"
-              compress="gzip"/>
-      <sync type="amazons3">
-        <option name="key" value="%env:AWS_ACCESS_KEY_ID%"/>
-        <option name="secret" value="%env:AWS_SECRET_ACCESS_KEY%"/>
-        <option name="bucket" value="my-backups"/>
-        <option name="region" value="eu-west-1"/>
-        <option name="path" value="/mysql/"/>
-      </sync>
-      <cleanup type="quantity">
-        <option name="amount" value="7"/>
-      </cleanup>
-    </backup>
-  </backups>
-</phpbu>
-```
-
-### PostgreSQL Backup
-
-```xml
-<backup name="postgres-backup">
-  <source type="pgdump">
-    <option name="host" value="postgres"/>
-    <option name="user" value="postgres"/>
-    <option name="password" value="%env:POSTGRES_PASSWORD%"/>
-    <option name="database" value="myapp"/>
-  </source>
-  <target dirname="/backups/postgres"
-          filename="dump-%Y%m%d.sql"
-          compress="gzip"/>
-</backup>
-```
-
-### MongoDB Backup
-
-```xml
-<backup name="mongo-backup">
-  <source type="mongodump">
-    <option name="host" value="mongo"/>
-    <option name="user" value="admin"/>
-    <option name="password" value="%env:MONGO_PASSWORD%"/>
-    <option name="databases" value="myapp"/>
-  </source>
-  <target dirname="/backups/mongo"
-          filename="dump-%Y%m%d"
-          compress="gzip"/>
-</backup>
-```
-
-### Directory Backup with Encryption
-
-```xml
-<backup name="files-encrypted">
-  <source type="tar">
-    <option name="path" value="/data/uploads"/>
-  </source>
-  <target dirname="/backups/files"
-          filename="uploads-%Y%m%d.tar"
-          compress="gzip"/>
-  <crypt type="openssl">
-    <option name="password" value="%env:BACKUP_ENCRYPTION_KEY%"/>
-    <option name="algorithm" value="aes-256-cbc"/>
-  </crypt>
-</backup>
-```
+- `mysql-backup.json` - MySQL database backup
+- `postgres-backup.json` - PostgreSQL database backup
+- `s3-sync.json` - File backup with S3 sync
 
 ## Building
 
@@ -245,32 +176,37 @@ services:
 
 ```bash
 # Build for current platform
-docker buildx bake
+docker bake dev
 
 # Build for multiple platforms
-docker buildx bake --set "*.platform=linux/amd64,linux/arm64"
+docker bake
 ```
 
 ### Development
 
 ```bash
 # Start development environment
-docker compose up -d
-
-# Run tests
-docker compose exec phpbu vendor/bin/phpunit
+docker compose up -d dev
 
 # Run phpbu with custom config
-docker compose exec phpbu phpbu --configuration=/app/phpbu.xml
+docker compose run --rm phpbu --configuration=/config/backup.json
 ```
 
 ## Security
 
-- Runs as non-root user (uid 1000)
+- Runs as non-root user (UID 1000)
 - Read-only root filesystem compatible
-- No shell in production image
 - Security scanning via Trivy in CI
+- Cosign-signed images with SLSA provenance
 - See [SECURITY.md](SECURITY.md) for vulnerability reporting
+
+### Verify Image Signature
+
+```bash
+cosign verify ghcr.io/netresearch/phpbu-docker:latest \
+  --certificate-identity-regexp "https://github.com/netresearch/phpbu-docker" \
+  --certificate-oidc-issuer "https://token.actions.githubusercontent.com"
+```
 
 ## Architecture Support
 
@@ -284,9 +220,8 @@ docker compose exec phpbu phpbu --configuration=/app/phpbu.xml
 | Tag | Description |
 |-----|-------------|
 | `latest` | Latest stable release |
-| `x.y.z` | Specific version |
-| `x.y` | Latest patch of minor version |
-| `edge` | Latest development build |
+| `6.0` | phpbu 6.0.x series |
+| `php8.4` | PHP 8.4 base image |
 
 ## Contributing
 
@@ -302,5 +237,4 @@ phpbu itself is created by [Sebastian Feldmann](https://github.com/sebastianfeld
 
 - [phpbu Documentation](https://phpbu.de/documentation.html)
 - [phpbu GitHub](https://github.com/sebastianfeldmann/phpbu)
-- [Docker Hub](https://hub.docker.com/r/sebastianfeldmann/phpbu)
-- [GitHub Container Registry](https://ghcr.io/sebastianfeldmann/phpbu)
+- [GitHub Container Registry](https://ghcr.io/netresearch/phpbu-docker)

@@ -6,9 +6,9 @@
 .gitlab-ci.yml
 .github
 
-# Documentation (keep README.md for context)
+# Documentation (exclude from build context)
 *.md
-!README.md
+!app/*.md
 
 # Compose and build files
 docker-compose*.yml

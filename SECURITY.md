@@ -5,8 +5,8 @@
 | Version | Supported          |
 | ------- | ------------------ |
 | latest  | :white_check_mark: |
-| php8.5  | :white_check_mark: |
-| < 1.0   | :x:                |
+| 6.0     | :white_check_mark: |
+| php8.4  | :white_check_mark: |
 
 ## Reporting a Vulnerability
 

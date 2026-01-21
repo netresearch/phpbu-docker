@@ -1,5 +1,5 @@
-# compose.yml - Modern Docker Compose format
-# Reference: https://docs.docker.com/compose/compose-file/
+# compose.yml - Docker Compose for phpbu
+# Usage: docker compose run --rm phpbu --configuration=/config/backup.json
 
 name: phpbu
 
@@ -12,18 +12,21 @@ services:
     environment:
       TZ: ${TZ:-UTC}
     volumes:
-      - ./config:/app/config:ro
+      - ./config:/config:ro
+      - ./backups:/backups
     security_opt:
       - no-new-privileges:true
     read_only: true
     tmpfs:
       - /tmp:mode=1777,size=64M
 
-  # Development with live reload
+  # Development mode
   dev:
     build:
       context: .
       target: build
     volumes:
       - ./app:/app
+      - ./config:/config:ro
+      - ./backups:/backups
     command: ["tail", "-f", "/dev/null"]

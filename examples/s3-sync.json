@@ -10,7 +10,7 @@
         }
       },
       "target": {
-        "dirname": "/tmp/backup",
+        "dirname": "/backups",
         "filename": "files-%Y%m%d-%H%i%s.tar",
         "compress": "gzip"
       },

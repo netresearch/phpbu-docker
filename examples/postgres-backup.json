@@ -14,7 +14,7 @@
         }
       },
       "target": {
-        "dirname": "/backup",
+        "dirname": "/backups",
         "filename": "postgres-%Y%m%d-%H%i%s.sql",
         "compress": "gzip"
       },

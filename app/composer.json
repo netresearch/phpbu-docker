@@ -1,6 +1,6 @@
 {
-    "name": "docker/backup",
-    "description": "container for backup several project sources like db, filesystem to different targets like sftp, s3 etc.",
+    "name": "netresearch/phpbu-docker",
+    "description": "Docker container for phpbu - backup databases and filesystems to various targets",
     "type": "project",
     "license": "LGPL-3.0-only",
     "authors": [
@@ -13,10 +13,12 @@
             "email": "norman.golatka@netresearch.de"
         }
     ],
-    "config": {
-        "bin-dir": ""
-    },
     "require": {
-        "phpbu/phpbu": "^6.0.30"
+        "php": ">=8.4",
+        "phpbu/phpbu": "^6.0"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
     }
 }

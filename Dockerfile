@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.9
 #########################################
 # Base stage - minimal runtime dependencies
-FROM php:8.5-alpine AS base
+FROM php:8.4-alpine AS base
 
 # Security: Create non-root user early
 RUN addgroup -g 1000 phpbu && \
@@ -12,6 +12,8 @@ RUN apk --no-cache --update upgrade && \
     apk --no-cache add \
         mysql-client \
         postgresql-client \
+        mongodb-tools \
+        redis \
         ca-certificates \
         tzdata
 
@@ -25,11 +27,11 @@ FROM base AS build
 ENV COMPOSER_ALLOW_SUPERUSER=1 \
     COMPOSER_HOME=/tmp/composer
 
-# Install Composer with checksum verification from official image
+# Install Composer from official image
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copy only dependency files first (layer caching)
-COPY --chown=phpbu:phpbu app/composer.json app/composer.lock* ./
+# Copy dependency files first (layer caching)
+COPY --chown=phpbu:phpbu app/composer.json app/composer.lock ./
 
 # Install dependencies with optimization
 RUN composer install \
@@ -40,9 +42,6 @@ RUN composer install \
     --prefer-dist \
     --optimize-autoloader \
     --classmap-authoritative
-
-# Remove Composer artifacts
-RUN rm -f composer.json composer.lock
 
 #########################################
 # Final stage - minimal production image
@@ -57,18 +56,18 @@ LABEL org.opencontainers.image.title="phpbu-docker" \
 # Copy built application from build stage
 COPY --from=build --chown=phpbu:phpbu /app /app
 
-# Create config directory with correct permissions
-RUN mkdir -p /app/config && chown phpbu:phpbu /app/config
+# Create directories with correct permissions
+RUN mkdir -p /backups && chown phpbu:phpbu /backups
 
 # Security: Switch to non-root user
 USER phpbu
 
 # Health check (validates phpbu is functional)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-    CMD ["/app/phpbu", "--version"]
+    CMD ["/app/vendor/bin/phpbu", "--version"]
 
-# Default config volume
-VOLUME ["/app/config"]
+# Volumes for config and backup output
+VOLUME ["/backups"]
 
-ENTRYPOINT ["/app/phpbu"]
+ENTRYPOINT ["/app/vendor/bin/phpbu"]
 CMD ["--help"]

@@ -43,18 +43,18 @@ jobs:
           targets: phpbu
           push: true
           set: |
+            phpbu.tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
+            phpbu.tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
-        env:
-          TAG: ${{ steps.version.outputs.version }}
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3
 
-      - name: Sign image
+      - name: Sign images
         run: |
-          cosign sign --yes \
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
+          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
+          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

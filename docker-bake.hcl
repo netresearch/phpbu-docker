@@ -1,4 +1,5 @@
 # docker-bake.hcl - Multi-platform build configuration
+# Usage: docker bake [target]
 # Reference: https://docs.docker.com/build/bake/
 
 variable "REGISTRY" {
@@ -9,12 +10,12 @@ variable "REPO" {
   default = "netresearch/phpbu-docker"
 }
 
-variable "TAG" {
-  default = "latest"
+variable "VERSION" {
+  default = "6.0"
 }
 
 variable "PHP_VERSION" {
-  default = "8.5"
+  default = "8.4"
 }
 
 # Shared configuration for all targets
@@ -34,9 +35,9 @@ target "phpbu" {
   ]
 
   tags = [
-    "${REGISTRY}/${REPO}:${TAG}",
+    "${REGISTRY}/${REPO}:${VERSION}",
+    "${REGISTRY}/${REPO}:latest",
     "${REGISTRY}/${REPO}:php${PHP_VERSION}",
-    equal("latest", TAG) ? "" : "${REGISTRY}/${REPO}:latest"
   ]
 
   labels = {
@@ -45,6 +46,7 @@ target "phpbu" {
     "org.opencontainers.image.vendor"      = "Netresearch GmbH & Co. KG"
     "org.opencontainers.image.source"      = "https://github.com/netresearch/phpbu-docker"
     "org.opencontainers.image.licenses"    = "LGPL-3.0"
+    "org.opencontainers.image.version"     = "${VERSION}"
   }
 
   # Supply chain security
@@ -60,22 +62,22 @@ target "phpbu" {
 
 # Development target (single platform, no push)
 target "dev" {
-  inherits  = ["phpbu"]
-  platforms = ["linux/amd64"]
-  tags      = ["phpbu:dev"]
-  output    = ["type=docker"]
-  attest    = []
+  inherits   = ["phpbu"]
+  platforms  = ["linux/amd64"]
+  tags       = ["phpbu:dev"]
+  output     = ["type=docker"]
+  attest     = []
   cache-from = []
   cache-to   = []
 }
 
 # CI target for testing
 target "ci" {
-  inherits  = ["phpbu"]
-  platforms = ["linux/amd64"]
-  tags      = ["phpbu:ci"]
-  output    = ["type=docker"]
-  attest    = []
+  inherits   = ["phpbu"]
+  platforms  = ["linux/amd64"]
+  tags       = ["phpbu:ci"]
+  output     = ["type=docker"]
+  attest     = []
   cache-from = []
   cache-to   = []
 }

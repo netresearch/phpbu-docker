@@ -14,11 +14,14 @@ services:
     volumes:
       - ./config:/config:ro
       - ./backups:/backups
+    # Security hardening
     security_opt:
       - no-new-privileges:true
     read_only: true
+    cap_drop:
+      - ALL
     tmpfs:
-      - /tmp:mode=1777,size=64M
+      - /tmp:mode=1777,size=64M,noexec,nosuid,nodev
 
   # Development mode
   dev:

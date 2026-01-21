@@ -5,9 +5,10 @@ FROM php:8.5-alpine AS base
 
 # Security: Create non-root user early
 RUN addgroup -g 1000 phpbu && \
-    adduser -D -u 1000 -G phpbu phpbu
+    adduser -D -u 1000 -G phpbu -s /sbin/nologin phpbu
 
 # Install runtime dependencies only
+# Note: redis package includes redis-cli for Redis backups
 RUN apk --no-cache --update upgrade && \
     apk --no-cache add \
         mysql-client \
@@ -15,7 +16,9 @@ RUN apk --no-cache --update upgrade && \
         mongodb-tools \
         redis \
         ca-certificates \
-        tzdata
+        tzdata && \
+    # Remove apk cache and temp files
+    rm -rf /var/cache/apk/* /tmp/*
 
 WORKDIR /app
 
@@ -27,8 +30,8 @@ FROM base AS build
 ENV COMPOSER_ALLOW_SUPERUSER=1 \
     COMPOSER_HOME=/tmp/composer
 
-# Install Composer from official image
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+# Install Composer from official image (pinned for reproducibility)
+COPY --from=composer:2@sha256:c404e6f07bdebf8a8c605be5b5fab88eef737f6e4acfba3651d39c824ce224d4 /usr/bin/composer /usr/bin/composer
 
 # Copy dependency files first (layer caching)
 COPY --chown=phpbu:phpbu app/composer.json app/composer.lock ./
@@ -41,7 +44,9 @@ RUN composer install \
     --no-scripts \
     --prefer-dist \
     --optimize-autoloader \
-    --classmap-authoritative
+    --classmap-authoritative && \
+    # Clean up composer cache
+    rm -rf /tmp/composer
 
 #########################################
 # Final stage - minimal production image
@@ -57,7 +62,9 @@ LABEL org.opencontainers.image.title="phpbu-docker" \
 COPY --from=build --chown=phpbu:phpbu /app /app
 
 # Create directories with correct permissions
-RUN mkdir -p /backups && chown phpbu:phpbu /backups
+RUN mkdir -p /backups && chown phpbu:phpbu /backups && \
+    # Remove unnecessary files to reduce image size
+    rm -rf /var/cache/apk/* /tmp/* /root/.ash_history 2>/dev/null || true
 
 # Security: Switch to non-root user
 USER phpbu

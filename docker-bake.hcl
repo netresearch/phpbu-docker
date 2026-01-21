@@ -62,22 +62,18 @@ target "phpbu" {
 
 # Development target (single platform, no push)
 target "dev" {
-  inherits   = ["phpbu"]
+  context    = "."
+  dockerfile = "Dockerfile"
   platforms  = ["linux/amd64"]
   tags       = ["phpbu:dev"]
   output     = ["type=docker"]
-  attest     = []
-  cache-from = []
-  cache-to   = []
 }
 
 # CI target for testing
 target "ci" {
-  inherits   = ["phpbu"]
+  context    = "."
+  dockerfile = "Dockerfile"
   platforms  = ["linux/amd64"]
   tags       = ["phpbu:ci"]
   output     = ["type=docker"]
-  attest     = []
-  cache-from = []
-  cache-to   = []
 }

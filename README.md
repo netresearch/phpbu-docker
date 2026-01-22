@@ -1,8 +1,12 @@
 # phpbu Docker
 
 [![Build Status](https://github.com/netresearch/phpbu-docker/actions/workflows/build.yml/badge.svg)](https://github.com/netresearch/phpbu-docker/actions/workflows/build.yml)
+[![Container Tests](https://github.com/netresearch/phpbu-docker/actions/workflows/test.yml/badge.svg)](https://github.com/netresearch/phpbu-docker/actions/workflows/test.yml)
 [![Security Scan](https://github.com/netresearch/phpbu-docker/actions/workflows/security.yml/badge.svg)](https://github.com/netresearch/phpbu-docker/actions/workflows/security.yml)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/netresearch/phpbu-docker/badge)](https://securityscorecards.dev/viewer/?uri=github.com/netresearch/phpbu-docker)
+[![SLSA 3](https://slsa.dev/images/gh-badge-level3.svg)](https://slsa.dev)
+[![License: LGPL-3.0](https://img.shields.io/badge/License-LGPL--3.0-blue.svg)](https://opensource.org/licenses/LGPL-3.0)
+[![GitHub release](https://img.shields.io/github/v/release/netresearch/phpbu-docker)](https://github.com/netresearch/phpbu-docker/releases)
 
 Production-ready Docker image for [phpbu](https://phpbu.de/) - PHP Backup Utility with comprehensive backup, sync, and cleanup capabilities.
 
@@ -14,7 +18,7 @@ Production-ready Docker image for [phpbu](https://phpbu.de/) - PHP Backup Utilit
 - **Security-first design**:
   - Cosign-signed images with keyless OIDC
   - SBOM (Software Bill of Materials) included
-  - SLSA Level 2 provenance attestation
+  - SLSA Build Level 3 provenance attestation
   - Daily vulnerability scanning (Trivy, Docker Scout)
   - OpenSSF Scorecard monitoring
 - **Pre-configured** for MySQL, PostgreSQL, MongoDB, Redis backups
@@ -276,7 +280,7 @@ docker compose run --rm phpbu --simulate --configuration=/config/backup.json
 |---------|------|
 | Image signing | Cosign (keyless OIDC) |
 | SBOM generation | SPDX format |
-| Provenance | SLSA Level 2 |
+| Provenance | SLSA Build Level 3 |
 | Vulnerability scanning | Trivy, Docker Scout |
 | Secrets detection | Gitleaks |
 | Dependency updates | Dependabot, Renovate |

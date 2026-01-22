@@ -71,6 +71,18 @@ docs(readme): update usage examples
 
 ## Pull Request Process
 
+```mermaid
+flowchart LR
+    A[Fork] --> B[Branch]
+    B --> C[Develop]
+    C --> D[Test]
+    D --> E[Lint]
+    E --> F[PR]
+    F --> G{Review}
+    G -->|Approved| H[Merge]
+    G -->|Changes| C
+```
+
 1. **Fork** the repository
 2. **Create** a feature branch from `main`
 3. **Make** your changes

@@ -42,24 +42,34 @@ docker run --rm \
 
 ## Architecture
 
+```mermaid
+flowchart TB
+    subgraph container["phpbu-docker"]
+        subgraph components["Components"]
+            config["/config<br/>(read-only)"]
+            phpbu["phpbu 6.0.x"]
+            clients["Backup Clients<br/>mysql, pg, mongo, redis"]
+        end
+
+        config --> phpbu
+        phpbu --> clients
+
+        subgraph storage["Storage"]
+            backups["/backups<br/>(writable volume)"]
+        end
+
+        components --> backups
+    end
+
+    subgraph security["Security"]
+        user["User: phpbu (1000)"]
+        shell["Shell: /sbin/nologin"]
+        fs["Read-only FS"]
+    end
+
+    container -.-> security
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     phpbu-docker                             │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
-│  │   Config    │  │   phpbu     │  │    Backup Clients   │ │
-│  │  /config    │──│   6.0.x     │──│  mysql, pg, mongo   │ │
-│  │  (read-only)│  │             │  │  redis              │ │
-│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
-│         │                │                    │             │
-│         ▼                ▼                    ▼             │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │              /backups (writable volume)              │   │
-│  └─────────────────────────────────────────────────────┘   │
-├─────────────────────────────────────────────────────────────┤
-│  User: phpbu (1000) │ Shell: /sbin/nologin │ Read-only FS  │
-└─────────────────────────────────────────────────────────────┘
-```
+
 
 ## Usage
 

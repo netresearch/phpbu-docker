@@ -24,6 +24,16 @@ We take security vulnerabilities seriously. If you discover a security issue, pl
 
 ### What to Expect
 
+```mermaid
+flowchart LR
+    A[Report] --> B[Acknowledge]
+    B --> C[Assess]
+    C --> D[Fix]
+    D --> E[Test]
+    E --> F[Disclose]
+    F --> G[Credit]
+```
+
 1. Acknowledgment of your report
 2. Assessment of severity and impact
 3. Development and testing of fix

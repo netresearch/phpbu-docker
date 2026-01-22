@@ -59,8 +59,8 @@ LABEL org.opencontainers.image.title="phpbu-docker" \
       org.opencontainers.image.source="https://github.com/netresearch/phpbu-docker" \
       org.opencontainers.image.licenses="LGPL-3.0"
 
-# Copy built application from build stage (--link for atomic layer)
-COPY --from=build --link --chown=phpbu:phpbu /app /app
+# Copy built application from build stage
+COPY --from=build --chown=phpbu:phpbu /app /app
 
 # Create directories with correct permissions
 RUN mkdir -p /backups && chown phpbu:phpbu /backups

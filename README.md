@@ -18,7 +18,7 @@ Production-ready Docker image for [phpbu](https://phpbu.de/) - PHP Backup Utilit
   - Cosign-signed images with keyless OIDC
   - SBOM (Software Bill of Materials) included
   - SLSA Build Level 3 provenance attestation
-  - Daily vulnerability scanning (Trivy, Docker Scout)
+  - Daily vulnerability scanning (Trivy)
   - OpenSSF Scorecard monitoring
 - **Pre-configured** for MySQL, PostgreSQL, MongoDB, Redis backups
 - **Sync support** for S3, SFTP, Dropbox, Google Drive, Azure
@@ -280,7 +280,7 @@ docker compose run --rm phpbu --simulate --configuration=/config/backup.json
 | Image signing | Cosign (keyless OIDC) |
 | SBOM generation | SPDX format |
 | Provenance | SLSA Build Level 3 |
-| Vulnerability scanning | Trivy, Docker Scout |
+| Vulnerability scanning | Trivy |
 | Secrets detection | Gitleaks |
 | Dependency updates | Dependabot, Renovate |
 | Scorecard monitoring | OpenSSF Scorecard |

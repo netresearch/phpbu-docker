@@ -6,7 +6,6 @@
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/netresearch/phpbu-docker/badge)](https://securityscorecards.dev/viewer/?uri=github.com/netresearch/phpbu-docker)
 [![SLSA 3](https://slsa.dev/images/gh-badge-level3.svg)](https://slsa.dev)
 [![License: LGPL-3.0](https://img.shields.io/badge/License-LGPL--3.0-blue.svg)](https://opensource.org/licenses/LGPL-3.0)
-[![GitHub release](https://img.shields.io/github/v/release/netresearch/phpbu-docker)](https://github.com/netresearch/phpbu-docker/releases)
 
 Production-ready Docker image for [phpbu](https://phpbu.de/) - PHP Backup Utility with comprehensive backup, sync, and cleanup capabilities.
 

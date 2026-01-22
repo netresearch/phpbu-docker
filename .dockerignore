@@ -30,6 +30,13 @@ examples/
 *.pem
 *.key
 
+# Config files not needed in image
+.editorconfig
+.hadolint.yaml
+.pre-commit-config.yaml
+renovate.json
+.claude/
+
 # IDE
 .idea/
 .vscode/

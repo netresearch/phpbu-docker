@@ -29,14 +29,15 @@ jobs:
           load: true
 
       - name: Log in to Docker Hub
-        if: secrets.DOCKERHUB_USERNAME != ''
+        id: docker-login
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3
+        continue-on-error: true
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Docker Scout CVE scan
-        if: secrets.DOCKERHUB_USERNAME != ''
+        if: steps.docker-login.outcome == 'success'
         uses: docker/scout-action@f8c776824083494ab0d56b8105ba2ca85c86e4de # v1
         with:
           command: cves
@@ -51,7 +52,7 @@ jobs:
           sarif_file: scout-results.sarif
 
       - name: Docker Scout recommendations
-        if: github.event_name == 'pull_request' && secrets.DOCKERHUB_USERNAME != ''
+        if: github.event_name == 'pull_request' && steps.docker-login.outcome == 'success'
         uses: docker/scout-action@f8c776824083494ab0d56b8105ba2ca85c86e4de # v1
         with:
           command: recommendations
@@ -59,5 +60,5 @@ jobs:
           only-fixed: true
 
       - name: Scout skipped notice
-        if: secrets.DOCKERHUB_USERNAME == ''
-        run: echo "::notice::Docker Scout skipped - DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets not configured"
+        if: steps.docker-login.outcome != 'success'
+        run: echo "::notice::Docker Scout skipped - DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets not configured or login failed"

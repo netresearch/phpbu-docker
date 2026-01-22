@@ -67,6 +67,8 @@ jobs:
           }
           EOF
           mkdir -p /tmp/backups
+          # Set permissions for phpbu user (UID 1000)
+          chmod 777 /tmp/backups
           docker run --rm \
             -v /tmp/test-config.json:/config/backup.json:ro \
             -v /tmp/backups:/backups \

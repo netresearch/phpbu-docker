@@ -14,6 +14,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+      security-events: write
 
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -28,14 +29,14 @@ jobs:
           load: true
 
       - name: Log in to Docker Hub
+        if: secrets.DOCKERHUB_USERNAME != ''
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3
-        continue-on-error: true
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Docker Scout CVE scan
-        if: ${{ secrets.DOCKERHUB_USERNAME != '' }}
+        if: secrets.DOCKERHUB_USERNAME != ''
         uses: docker/scout-action@f8c776824083494ab0d56b8105ba2ca85c86e4de # v1
         with:
           command: cves
@@ -45,7 +46,7 @@ jobs:
 
       - name: Upload Scout results
         uses: github/codeql-action/upload-sarif@4bdb89f48054571735e3792627da6195c57459e2 # v3
-        if: ${{ hashFiles('scout-results.sarif') != '' }}
+        if: always() && hashFiles('scout-results.sarif') != ''
         with:
           sarif_file: scout-results.sarif
 
@@ -58,5 +59,5 @@ jobs:
           only-fixed: true
 
       - name: Scout skipped notice
-        if: ${{ secrets.DOCKERHUB_USERNAME == '' }}
+        if: secrets.DOCKERHUB_USERNAME == ''
         run: echo "::notice::Docker Scout skipped - DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets not configured"

@@ -2,7 +2,7 @@
 
 ## Scope
 
-This security policy covers vulnerabilities in the **Docker image packaging** (Dockerfile, CI/CD, container configuration). For vulnerabilities in phpbu itself, please report to the [upstream phpbu project](https://github.com/sebastianfeldmann/phpbu/security).
+This security policy covers vulnerabilities in the **Docker image packaging** (Dockerfile, CI/CD, container configuration). For vulnerabilities in phpbu itself, please report to the [upstream phpbu project](https://github.com/sebastianfeldmann/phpbu/security/advisories).
 
 ## Reporting a Vulnerability
 

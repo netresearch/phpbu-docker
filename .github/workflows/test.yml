@@ -1,0 +1,80 @@
+name: Container Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Build test image
+        uses: docker/bake-action@5be5f02ff8819ecd3092ea6b2e6261c31774f2b4 # v6
+        with:
+          targets: ci
+          load: true
+
+      - name: Test phpbu version
+        run: |
+          docker run --rm phpbu:ci --version
+          docker run --rm phpbu:ci --version | grep -E "^phpbu [0-9]+\.[0-9]+\.[0-9]+"
+
+      - name: Test phpbu help
+        run: docker run --rm phpbu:ci --help | grep -q "backup"
+
+      - name: Test non-root user
+        run: |
+          USER=$(docker run --rm --entrypoint id phpbu:ci -u)
+          test "$USER" = "1000" || (echo "Expected UID 1000, got $USER" && exit 1)
+
+      - name: Test read-only filesystem compatibility
+        run: |
+          docker run --rm --read-only --tmpfs /tmp:mode=1777 phpbu:ci --version
+
+      - name: Test healthcheck
+        run: |
+          # Start container in background
+          docker run -d --name phpbu-test phpbu:ci tail -f /dev/null
+          # Run healthcheck command
+          docker exec phpbu-test /app/vendor/bin/phpbu --version
+          docker rm -f phpbu-test
+
+      - name: Test with example config
+        run: |
+          mkdir -p /tmp/backups
+          docker run --rm \
+            -v ${{ github.workspace }}/examples:/config:ro \
+            -v /tmp/backups:/backups \
+            phpbu:ci \
+            --configuration=/config/mysql-backup.json \
+            --simulate
+
+  structure-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Build test image
+        uses: docker/bake-action@5be5f02ff8819ecd3092ea6b2e6261c31774f2b4 # v6
+        with:
+          targets: ci
+          load: true
+
+      - name: Install container-structure-test
+        run: |
+          curl -LO https://github.com/GoogleContainerTools/container-structure-test/releases/download/v1.19.3/container-structure-test-linux-amd64
+          chmod +x container-structure-test-linux-amd64
+          sudo mv container-structure-test-linux-amd64 /usr/local/bin/container-structure-test
+
+      - name: Run structure tests
+        run: container-structure-test test --image phpbu:ci --config tests/container-structure-test.yaml

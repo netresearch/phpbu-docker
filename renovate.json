@@ -1,6 +1,54 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
+    "config:recommended",
+    "docker:enableMajor",
+    ":pinAllExceptPeerDependencies",
+    ":semanticCommits",
+    ":preserveSemverRanges",
+    "schedule:weekly"
+  ],
+  "labels": ["dependencies"],
+  "prHourlyLimit": 2,
+  "prConcurrentLimit": 5,
+  "vulnerabilityAlerts": {
+    "labels": ["security"],
+    "enabled": true
+  },
+  "packageRules": [
+    {
+      "description": "Auto-merge minor and patch updates",
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash"
+    },
+    {
+      "description": "Group Docker updates",
+      "matchDatasources": ["docker"],
+      "groupName": "Docker images"
+    },
+    {
+      "description": "Group GitHub Actions",
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions",
+      "pinDigests": true
+    },
+    {
+      "description": "Security updates - high priority",
+      "matchCategories": ["security"],
+      "labels": ["security", "priority:high"],
+      "prPriority": 10
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": [
+        "COPY --from=(?<depName>[^:]+):(?<currentValue>[^@]+)@(?<currentDigest>sha256:[a-f0-9]+)"
+      ],
+      "datasourceTemplate": "docker"
+    }
   ]
 }

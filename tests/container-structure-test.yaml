@@ -1,0 +1,84 @@
+schemaVersion: 2.0.0
+
+metadataTest:
+  user: "phpbu"
+  workdir: "/app"
+  entrypoint: ["/app/vendor/bin/phpbu"]
+  cmd: ["--help"]
+  exposedPorts: []
+  volumes: ["/backups"]
+
+fileExistenceTests:
+  - name: "phpbu binary exists"
+    path: "/app/vendor/bin/phpbu"
+    shouldExist: true
+    permissions: "-rwxr-xr-x"
+
+  - name: "composer.json exists"
+    path: "/app/composer.json"
+    shouldExist: true
+
+  - name: "backups directory exists"
+    path: "/backups"
+    shouldExist: true
+    isExecutableBy: "owner"
+
+  - name: "No composer in production"
+    path: "/usr/bin/composer"
+    shouldExist: false
+
+fileContentTests:
+  - name: "phpbu is executable PHP"
+    path: "/app/vendor/bin/phpbu"
+    expectedContents: ["#!/usr/bin/env php"]
+
+commandTests:
+  - name: "phpbu version works"
+    command: "/app/vendor/bin/phpbu"
+    args: ["--version"]
+    expectedOutput: ["phpbu"]
+    exitCode: 0
+
+  - name: "phpbu help works"
+    command: "/app/vendor/bin/phpbu"
+    args: ["--help"]
+    expectedOutput: ["backup", "configuration"]
+    exitCode: 0
+
+  - name: "Running as non-root"
+    command: "id"
+    args: ["-u"]
+    expectedOutput: ["1000"]
+    exitCode: 0
+
+  - name: "Running as phpbu user"
+    command: "id"
+    args: ["-un"]
+    expectedOutput: ["phpbu"]
+    exitCode: 0
+
+  - name: "mysql client available"
+    command: "which"
+    args: ["mysql"]
+    exitCode: 0
+
+  - name: "pg_dump available"
+    command: "which"
+    args: ["pg_dump"]
+    exitCode: 0
+
+  - name: "mongodump available"
+    command: "which"
+    args: ["mongodump"]
+    exitCode: 0
+
+  - name: "redis-cli available"
+    command: "which"
+    args: ["redis-cli"]
+    exitCode: 0
+
+  - name: "No shell for phpbu user"
+    command: "getent"
+    args: ["passwd", "phpbu"]
+    expectedOutput: ["/sbin/nologin"]
+    exitCode: 0

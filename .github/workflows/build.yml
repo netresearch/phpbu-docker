@@ -42,6 +42,24 @@ jobs:
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v4
 
+      - name: Extract phpbu version from composer.lock
+        id: version
+        run: |
+          PHPBU_VERSION=$(jq -r '.packages[] | select(.name == "phpbu/phpbu") | .version' app/composer.lock)
+          PHPBU_MINOR=$(echo "$PHPBU_VERSION" | cut -d. -f1,2)
+          PHPBU_MAJOR=$(echo "$PHPBU_VERSION" | cut -d. -f1)
+          BUILD_DATE=$(date -u +%Y-%m-%d)
+          GIT_SHA=$(git rev-parse --short HEAD)
+          echo "phpbu_version=$PHPBU_VERSION" >> $GITHUB_OUTPUT
+          echo "phpbu_minor=$PHPBU_MINOR" >> $GITHUB_OUTPUT
+          echo "phpbu_major=$PHPBU_MAJOR" >> $GITHUB_OUTPUT
+          echo "build_date=$BUILD_DATE" >> $GITHUB_OUTPUT
+          echo "git_sha=$GIT_SHA" >> $GITHUB_OUTPUT
+          echo "## Version Info" >> $GITHUB_STEP_SUMMARY
+          echo "- phpbu: $PHPBU_VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "- Build date: $BUILD_DATE" >> $GITHUB_STEP_SUMMARY
+          echo "- Git SHA: $GIT_SHA" >> $GITHUB_STEP_SUMMARY
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
 
@@ -94,6 +112,12 @@ jobs:
           set: |
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
+        env:
+          PHPBU_VERSION: ${{ steps.version.outputs.phpbu_version }}
+          PHPBU_MINOR: ${{ steps.version.outputs.phpbu_minor }}
+          PHPBU_MAJOR: ${{ steps.version.outputs.phpbu_major }}
+          BUILD_DATE: ${{ steps.version.outputs.build_date }}
+          GIT_SHA: ${{ steps.version.outputs.git_sha }}
 
       - name: Install Cosign
         if: github.event_name != 'pull_request'
@@ -101,6 +125,12 @@ jobs:
 
       - name: Sign images
         if: github.event_name != 'pull_request'
+        env:
+          PHPBU_VERSION: ${{ steps.version.outputs.phpbu_version }}
+          PHPBU_MINOR: ${{ steps.version.outputs.phpbu_minor }}
+          PHPBU_MAJOR: ${{ steps.version.outputs.phpbu_major }}
+          BUILD_DATE: ${{ steps.version.outputs.build_date }}
+          GIT_SHA: ${{ steps.version.outputs.git_sha }}
         run: |
           for tag in $(docker buildx bake --print 2>/dev/null | jq -r '.target.phpbu.tags[]'); do
             cosign sign --yes "$tag"
@@ -108,10 +138,15 @@ jobs:
 
       - name: Build summary
         if: github.event_name != 'pull_request'
+        env:
+          PHPBU_VERSION: ${{ steps.version.outputs.phpbu_version }}
+          BUILD_DATE: ${{ steps.version.outputs.build_date }}
+          GIT_SHA: ${{ steps.version.outputs.git_sha }}
         run: |
           echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Image**: \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Tags**: \`$PHPBU_VERSION\`, \`$PHPBU_VERSION-$BUILD_DATE\`, \`$PHPBU_VERSION-$GIT_SHA\`, \`latest\`" >> $GITHUB_STEP_SUMMARY
           echo "**Platforms**: linux/amd64, linux/arm64" >> $GITHUB_STEP_SUMMARY
           echo "**Signed**: Yes (Cosign keyless)" >> $GITHUB_STEP_SUMMARY
           echo "**SBOM**: Yes (SPDX)" >> $GITHUB_STEP_SUMMARY

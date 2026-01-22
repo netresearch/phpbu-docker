@@ -38,13 +38,10 @@ jobs:
         run: |
           docker run --rm --read-only --tmpfs /tmp:mode=1777 phpbu:ci --version
 
-      - name: Test healthcheck
+      - name: Test healthcheck command
         run: |
-          # Start container in background
-          docker run -d --name phpbu-test phpbu:ci tail -f /dev/null
-          # Run healthcheck command
-          docker exec phpbu-test /app/vendor/bin/phpbu --version
-          docker rm -f phpbu-test
+          # Verify healthcheck command works (same as HEALTHCHECK in Dockerfile)
+          docker run --rm --entrypoint /app/vendor/bin/phpbu phpbu:ci --version
 
       - name: Test with example config
         run: |

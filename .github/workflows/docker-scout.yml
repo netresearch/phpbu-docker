@@ -28,7 +28,7 @@ jobs:
           load: true
 
       - name: Docker Scout CVE scan
-        uses: docker/scout-action@67eb1afe777f570c3847f4e4045da4e691a7ac44 # v1.16.1
+        uses: docker/scout-action@f8c776824083494ab0d56b8105ba2ca85c86e4de # v1
         with:
           command: cves
           image: phpbu:ci
@@ -43,7 +43,7 @@ jobs:
 
       - name: Docker Scout recommendations
         if: github.event_name == 'pull_request'
-        uses: docker/scout-action@67eb1afe777f570c3847f4e4045da4e691a7ac44 # v1.16.1
+        uses: docker/scout-action@f8c776824083494ab0d56b8105ba2ca85c86e4de # v1
         with:
           command: recommendations
           image: phpbu:ci

@@ -1,16 +1,12 @@
 # Security Policy
 
-## Supported Versions
+## Scope
 
-| Version | Supported          |
-| ------- | ------------------ |
-| latest  | :white_check_mark: |
-| 6.0     | :white_check_mark: |
-| php8.5  | :white_check_mark: |
+This security policy covers vulnerabilities in the **Docker image packaging** (Dockerfile, CI/CD, container configuration). For vulnerabilities in phpbu itself, please report to the [upstream phpbu project](https://github.com/sebastianfeldmann/phpbu/security).
 
 ## Reporting a Vulnerability
 
-We take security vulnerabilities seriously. If you discover a security issue, please report it responsibly.
+We take security vulnerabilities seriously. If you discover a security issue in the container image, please report it responsibly.
 
 ### How to Report
 

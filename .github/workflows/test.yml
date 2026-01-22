@@ -43,14 +43,35 @@ jobs:
           # Verify healthcheck command works (same as HEALTHCHECK in Dockerfile)
           docker run --rm --entrypoint /app/vendor/bin/phpbu phpbu:ci --version
 
-      - name: Test with example config
+      - name: Test simulate mode
         run: |
+          # Create a simple test config without external adapters
+          cat > /tmp/test-config.json <<'EOF'
+          {
+            "verbose": true,
+            "backups": [
+              {
+                "name": "Test backup",
+                "source": {
+                  "type": "tar",
+                  "options": {
+                    "path": "/app"
+                  }
+                },
+                "target": {
+                  "dirname": "/backups",
+                  "filename": "test-%Y%m%d.tar"
+                }
+              }
+            ]
+          }
+          EOF
           mkdir -p /tmp/backups
           docker run --rm \
-            -v ${{ github.workspace }}/examples:/config:ro \
+            -v /tmp/test-config.json:/config/backup.json:ro \
             -v /tmp/backups:/backups \
             phpbu:ci \
-            --configuration=/config/mysql-backup.json \
+            --configuration=/config/backup.json \
             --simulate
 
   structure-test:

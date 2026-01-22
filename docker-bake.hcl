@@ -65,7 +65,7 @@ target "phpbu" {
   labels = {
     "org.opencontainers.image.title"       = "phpbu-docker"
     "org.opencontainers.image.description" = "PHP Backup Utility Docker Image"
-    "org.opencontainers.image.vendor"      = "Netresearch GmbH & Co. KG"
+    "org.opencontainers.image.vendor"      = "Netresearch DTT GmbH"
     "org.opencontainers.image.source"      = "https://github.com/netresearch/phpbu-docker"
     "org.opencontainers.image.licenses"    = "LGPL-3.0"
     "org.opencontainers.image.version"     = "${PHPBU_VERSION}"

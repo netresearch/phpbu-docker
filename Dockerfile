@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1.9
 #########################################
 # Base stage - minimal runtime dependencies
-FROM php:8.5-alpine AS base
+# Pin to digest for supply chain security (renovate will update)
+FROM php:8.5-alpine@sha256:c92a69cf4422b41524c380886d0ef15382468a17e1e94c2fb848b638103afe8b AS base
 
 # Security: Create non-root user early
 RUN addgroup -g 1000 phpbu && \

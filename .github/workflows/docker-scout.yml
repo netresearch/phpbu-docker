@@ -8,6 +8,8 @@ on:
   schedule:
     - cron: '0 6 * * *'  # Daily
 
+permissions: {}
+
 jobs:
   scout:
     runs-on: ubuntu-latest

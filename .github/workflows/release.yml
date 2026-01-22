@@ -4,6 +4,8 @@ on:
   push:
     tags: ['v*']
 
+permissions: {}
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}

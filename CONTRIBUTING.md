@@ -135,7 +135,6 @@ docker run --rm -i hadolint/hadolint < Dockerfile
 - Use multi-stage builds
 - Minimize layers
 - Run as non-root user
-- Include health checks
 - Add OCI labels
 - Follow hadolint recommendations
 

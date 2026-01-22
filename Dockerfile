@@ -68,10 +68,6 @@ RUN mkdir -p /backups && chown phpbu:phpbu /backups
 # Security: Switch to non-root user
 USER phpbu
 
-# Health check (validates phpbu is functional)
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-    CMD ["/app/vendor/bin/phpbu", "--version"]
-
 # Volumes for config and backup output
 VOLUME ["/backups"]
 

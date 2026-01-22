@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.9
+# syntax=docker/dockerfile:1.20
 #########################################
 # Base stage - minimal runtime dependencies
 FROM php:8.5-alpine AS base

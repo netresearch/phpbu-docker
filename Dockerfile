@@ -63,9 +63,7 @@ LABEL org.opencontainers.image.title="phpbu-docker" \
 COPY --from=build --chown=phpbu:phpbu /app /app
 
 # Create directories with correct permissions
-RUN mkdir -p /backups && chown phpbu:phpbu /backups && \
-    # Remove unnecessary files to reduce image size
-    rm -rf /var/cache/apk/* /tmp/* /root/.ash_history 2>/dev/null || true
+RUN mkdir -p /backups && chown phpbu:phpbu /backups
 
 # Security: Switch to non-root user
 USER phpbu

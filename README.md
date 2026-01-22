@@ -160,7 +160,7 @@ Or use Ofelia scheduler:
 ```yaml
 services:
   scheduler:
-    image: mcuadros/ofelia:latest
+    image: ghcr.io/netresearch/ofelia:latest
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     labels:

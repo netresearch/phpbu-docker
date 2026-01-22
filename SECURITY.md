@@ -50,7 +50,7 @@ This project implements the following security practices:
 ### Supply Chain Security
 - Signed images with Cosign (keyless OIDC)
 - SBOM generation for dependency tracking
-- SLSA Level 2 provenance attestation
+- SLSA Build Level 3 provenance attestation
 - Dependabot for automated dependency updates
 - Gitleaks scanning for secrets
 

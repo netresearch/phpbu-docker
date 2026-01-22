@@ -55,7 +55,7 @@ FROM base AS final
 
 LABEL org.opencontainers.image.title="phpbu-docker" \
       org.opencontainers.image.description="PHP Backup Utility Docker Image" \
-      org.opencontainers.image.vendor="Netresearch GmbH & Co. KG" \
+      org.opencontainers.image.vendor="Netresearch DTT GmbH" \
       org.opencontainers.image.source="https://github.com/netresearch/phpbu-docker" \
       org.opencontainers.image.licenses="LGPL-3.0"
 
@@ -63,16 +63,10 @@ LABEL org.opencontainers.image.title="phpbu-docker" \
 COPY --from=build --chown=phpbu:phpbu /app /app
 
 # Create directories with correct permissions
-RUN mkdir -p /backups && chown phpbu:phpbu /backups && \
-    # Remove unnecessary files to reduce image size
-    rm -rf /var/cache/apk/* /tmp/* /root/.ash_history 2>/dev/null || true
+RUN mkdir -p /backups && chown phpbu:phpbu /backups
 
 # Security: Switch to non-root user
 USER phpbu
-
-# Health check (validates phpbu is functional)
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-    CMD ["/app/vendor/bin/phpbu", "--version"]
 
 # Volumes for config and backup output
 VOLUME ["/backups"]

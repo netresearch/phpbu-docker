@@ -1,0 +1,49 @@
+# Release notes configuration
+# https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes
+
+changelog:
+  exclude:
+    labels:
+      - dependencies
+      - skip-changelog
+    authors:
+      - dependabot[bot]
+      - renovate[bot]
+      - github-actions[bot]
+
+  categories:
+    - title: "Breaking Changes"
+      labels:
+        - breaking-change
+        - major
+
+    - title: "Security"
+      labels:
+        - security
+
+    - title: "Features"
+      labels:
+        - enhancement
+        - feature
+
+    - title: "Bug Fixes"
+      labels:
+        - bug
+        - bugfix
+        - fix
+
+    - title: "Documentation"
+      labels:
+        - documentation
+        - docs
+
+    - title: "Maintenance"
+      labels:
+        - chore
+        - maintenance
+        - ci
+        - infrastructure
+
+    - title: "Other Changes"
+      labels:
+        - "*"

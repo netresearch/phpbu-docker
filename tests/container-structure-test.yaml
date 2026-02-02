@@ -82,3 +82,16 @@ commandTests:
     args: ["passwd", "phpbu"]
     expectedOutput: ["/sbin/nologin"]
     exitCode: 0
+
+  - name: "No root-owned writable files in /app"
+    command: "find"
+    args: ["/app", "-user", "root", "-perm", "-002", "-type", "f"]
+    expectedOutput: []
+    exitCode: 0
+
+  - name: "No setuid binaries"
+    command: "find"
+    args: ["/", "-perm", "/4000", "-type", "f"]
+    expectedOutput: []
+    excludedOutput: ["/app"]
+    exitCode: 0

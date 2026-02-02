@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.9
+# syntax=docker/dockerfile:1.14
 #########################################
 # Base stage - minimal runtime dependencies
 # Pin to digest for supply chain security (renovate will update)
@@ -10,6 +10,7 @@ RUN addgroup -g 1000 phpbu && \
 
 # Install runtime dependencies only
 # Note: redis package includes redis-cli for Redis backups
+# hadolint ignore=DL3018
 RUN apk --no-cache --update upgrade && \
     apk --no-cache add \
         mysql-client \
@@ -18,8 +19,8 @@ RUN apk --no-cache --update upgrade && \
         redis \
         ca-certificates \
         tzdata && \
-    # Remove apk cache and temp files
-    rm -rf /var/cache/apk/* /tmp/*
+    # Remove apk cache, temp files, and unnecessary files
+    rm -rf /var/cache/apk/* /tmp/* /root/.cache /var/log/*
 
 WORKDIR /app
 
@@ -53,11 +54,14 @@ RUN composer install \
 # Final stage - minimal production image
 FROM base AS final
 
+# OCI image labels
 LABEL org.opencontainers.image.title="phpbu-docker" \
       org.opencontainers.image.description="PHP Backup Utility Docker Image" \
       org.opencontainers.image.vendor="Netresearch DTT GmbH" \
       org.opencontainers.image.source="https://github.com/netresearch/phpbu-docker" \
-      org.opencontainers.image.licenses="LGPL-3.0"
+      org.opencontainers.image.documentation="https://github.com/netresearch/phpbu-docker#readme" \
+      org.opencontainers.image.licenses="LGPL-3.0" \
+      org.opencontainers.image.base.name="docker.io/library/php:8.5-alpine"
 
 # Copy built application from build stage
 COPY --from=build --chown=phpbu:phpbu /app /app
@@ -70,6 +74,10 @@ USER phpbu
 
 # Volumes for config and backup output
 VOLUME ["/backups"]
+
+# Healthcheck - verify phpbu is functional
+HEALTHCHECK --interval=60s --timeout=10s --start-period=5s --retries=3 \
+    CMD ["/app/vendor/bin/phpbu", "--version"]
 
 ENTRYPOINT ["/app/vendor/bin/phpbu"]
 CMD ["--help"]

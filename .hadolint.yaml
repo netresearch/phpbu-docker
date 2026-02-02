@@ -1,2 +1,13 @@
-ignored:
-  - DL3018  # Pin versions in apk add - not practical for rolling release Alpine
+# Hadolint configuration
+# https://github.com/hadolint/hadolint#configure
+---
+# Warnings are treated as errors in CI
+failure-threshold: warning
+
+# Trusted registries for FROM instructions
+trustedRegistries:
+  - docker.io
+  - ghcr.io
+
+# Note: DL3018 (apk version pinning) is ignored inline where needed
+# because Alpine rolling releases make version pinning impractical

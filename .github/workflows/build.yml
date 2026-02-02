@@ -15,12 +15,46 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  update-deps:
+    # Only update deps on push to main or scheduled runs, not PRs
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.update.outputs.sha }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Update composer dependencies
+        id: update
+        run: |
+          composer update --working-dir=app
+          git add app/composer.lock
+          if git diff --staged --quiet; then
+            echo "No dependency updates"
+            echo "sha=${{ github.sha }}" >> $GITHUB_OUTPUT
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "chore(deps): update composer.lock"
+            git push
+            NEW_SHA=$(git rev-parse HEAD)
+            echo "sha=$NEW_SHA" >> $GITHUB_OUTPUT
+            echo "Dependencies updated and committed: $NEW_SHA"
+          fi
+
   lint:
+    needs: [update-deps]
+    if: always() && !cancelled() && !failure()
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          # Use updated SHA from update-deps if available, otherwise triggering SHA
+          ref: ${{ needs.update-deps.outputs.sha || github.sha }}
 
       - name: Lint Dockerfile
         uses: hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5 # v3.3.0
@@ -34,7 +68,8 @@ jobs:
         run: docker buildx bake --print
 
   build:
-    needs: lint
+    needs: [lint, update-deps]
+    if: always() && needs.lint.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -45,6 +80,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          # Use updated SHA from update-deps if available, otherwise triggering SHA
+          ref: ${{ needs.update-deps.outputs.sha || github.sha }}
 
       - name: Extract phpbu version from composer.lock
         id: version

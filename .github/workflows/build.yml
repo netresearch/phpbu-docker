@@ -15,7 +15,42 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  update-deps:
+    # Only update deps on push to main or scheduled runs, not PRs
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      changed: ${{ steps.update.outputs.changed }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Update composer dependencies
+        id: update
+        run: |
+          composer update --working-dir=app
+          git add app/composer.lock
+          if git diff --staged --quiet; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No dependency updates"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "chore(deps): update composer.lock"
+            git push
+            echo "Dependencies updated, new build will be triggered"
+          fi
+
   lint:
+    needs: [update-deps]
+    # Run if: PR, OR update-deps didn't change anything, OR update-deps was skipped
+    if: |
+      always() &&
+      (github.event_name == 'pull_request' ||
+       needs.update-deps.outputs.changed == 'false' ||
+       needs.update-deps.result == 'skipped')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -34,7 +69,14 @@ jobs:
         run: docker buildx bake --print
 
   build:
-    needs: lint
+    needs: [lint, update-deps]
+    # Run if lint passed AND (PR OR no dep changes OR update-deps skipped)
+    if: |
+      always() &&
+      needs.lint.result == 'success' &&
+      (github.event_name == 'pull_request' ||
+       needs.update-deps.outputs.changed == 'false' ||
+       needs.update-deps.result == 'skipped')
     runs-on: ubuntu-latest
     permissions:
       contents: read

@@ -22,7 +22,7 @@ jobs:
     permissions:
       contents: write
     outputs:
-      changed: ${{ steps.update.outputs.changed }}
+      sha: ${{ steps.update.outputs.sha }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
@@ -32,30 +32,29 @@ jobs:
           composer update --working-dir=app
           git add app/composer.lock
           if git diff --staged --quiet; then
-            echo "changed=false" >> $GITHUB_OUTPUT
             echo "No dependency updates"
+            echo "sha=${{ github.sha }}" >> $GITHUB_OUTPUT
           else
-            echo "changed=true" >> $GITHUB_OUTPUT
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git commit -m "chore(deps): update composer.lock"
             git push
-            echo "Dependencies updated, new build will be triggered"
+            NEW_SHA=$(git rev-parse HEAD)
+            echo "sha=$NEW_SHA" >> $GITHUB_OUTPUT
+            echo "Dependencies updated and committed: $NEW_SHA"
           fi
 
   lint:
     needs: [update-deps]
-    # Run if: PR, OR update-deps didn't change anything, OR update-deps was skipped
-    if: |
-      always() &&
-      (github.event_name == 'pull_request' ||
-       needs.update-deps.outputs.changed == 'false' ||
-       needs.update-deps.result == 'skipped')
+    if: always() && !cancelled() && !failure()
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          # Use updated SHA from update-deps if available, otherwise triggering SHA
+          ref: ${{ needs.update-deps.outputs.sha || github.sha }}
 
       - name: Lint Dockerfile
         uses: hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5 # v3.3.0
@@ -70,13 +69,7 @@ jobs:
 
   build:
     needs: [lint, update-deps]
-    # Run if lint passed AND (PR OR no dep changes OR update-deps skipped)
-    if: |
-      always() &&
-      needs.lint.result == 'success' &&
-      (github.event_name == 'pull_request' ||
-       needs.update-deps.outputs.changed == 'false' ||
-       needs.update-deps.result == 'skipped')
+    if: always() && needs.lint.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -87,6 +80,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          # Use updated SHA from update-deps if available, otherwise triggering SHA
+          ref: ${{ needs.update-deps.outputs.sha || github.sha }}
 
       - name: Extract phpbu version from composer.lock
         id: version

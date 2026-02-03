@@ -42,6 +42,8 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "major=$(echo $VERSION | cut -d. -f1)" >> $GITHUB_OUTPUT
           echo "minor=$(echo $VERSION | cut -d. -f1-2)" >> $GITHUB_OUTPUT
+          echo "build_date=$(date -u +%Y-%m-%d)" >> $GITHUB_OUTPUT
+          echo "git_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Build and push (both variants)
         uses: docker/bake-action@5be5f02ff8819ecd3092ea6b2e6261c31774f2b4 # v6
@@ -51,20 +53,14 @@ jobs:
           sbom: true
           provenance: mode=max
           set: |
-            minimal.tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
-            minimal.tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}-minimal
-            minimal.tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.minor }}
-            minimal.tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.minor }}-minimal
-            minimal.tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.major }}
-            minimal.tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.major }}-minimal
-            minimal.tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            minimal.tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:minimal
-            full.tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}-full
-            full.tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.minor }}-full
-            full.tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.major }}-full
-            full.tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:full
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
+        env:
+          PHPBU_VERSION: ${{ steps.version.outputs.version }}
+          PHPBU_MINOR: ${{ steps.version.outputs.minor }}
+          PHPBU_MAJOR: ${{ steps.version.outputs.major }}
+          BUILD_DATE: ${{ steps.version.outputs.build_date }}
+          GIT_SHA: ${{ steps.version.outputs.git_sha }}
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
@@ -73,9 +69,11 @@ jobs:
         run: |
           # Sign minimal variant tags
           cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
+          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}-${{ steps.version.outputs.build_date }}
           cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           # Sign full variant tags
           cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}-full
+          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}-full-${{ steps.version.outputs.build_date }}
           cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:full
 
       - name: Create GitHub Release

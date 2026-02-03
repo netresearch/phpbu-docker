@@ -37,18 +37,32 @@ jobs:
 
       - name: Extract version from tag
         id: version
-        run: echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "major=$(echo $VERSION | cut -d. -f1)" >> $GITHUB_OUTPUT
+          echo "minor=$(echo $VERSION | cut -d. -f1-2)" >> $GITHUB_OUTPUT
 
-      - name: Build and push
+      - name: Build and push (both variants)
         uses: docker/bake-action@5be5f02ff8819ecd3092ea6b2e6261c31774f2b4 # v6
         with:
-          targets: phpbu
+          targets: minimal,full
           push: true
           sbom: true
           provenance: mode=max
           set: |
-            phpbu.tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
-            phpbu.tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            minimal.tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
+            minimal.tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}-minimal
+            minimal.tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.minor }}
+            minimal.tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.minor }}-minimal
+            minimal.tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.major }}
+            minimal.tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.major }}-minimal
+            minimal.tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            minimal.tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:minimal
+            full.tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}-full
+            full.tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.minor }}-full
+            full.tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.major }}-full
+            full.tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:full
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
 
@@ -57,18 +71,28 @@ jobs:
 
       - name: Sign images
         run: |
+          # Sign minimal variant tags
           cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
           cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          # Sign full variant tags
+          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}-full
+          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:full
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2
         with:
           generate_release_notes: true
           body: |
-            ## Docker Image
+            ## Docker Images
 
+            ### Minimal variant (~50MB) - database backups only
             ```bash
             docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
+            ```
+
+            ### Full variant (~150MB) - all sync adapters (S3, SFTP, Azure, etc.)
+            ```bash
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}-full
             ```
 
             ## Verify Signature

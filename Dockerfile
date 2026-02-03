@@ -82,8 +82,9 @@ COPY --from=composer:2@sha256:c404e6f07bdebf8a8c605be5b5fab88eef737f6e4acfba3651
 
 # Copy full variant dependency files
 COPY --chown=phpbu:phpbu app/composer-full.json ./composer.json
+COPY --chown=phpbu:phpbu app/composer-full.lock ./composer.lock
 
-# Install dependencies with optimization (generates fresh lock file)
+# Install dependencies with optimization
 RUN composer install \
     --no-ansi \
     --no-dev \

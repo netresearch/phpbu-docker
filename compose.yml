@@ -23,13 +23,26 @@ services:
     tmpfs:
       - /tmp:mode=1777,size=64M,noexec,nosuid,nodev
 
-  # Development mode
+  # Development mode (minimal variant)
   dev:
     build:
       context: .
-      target: build
+      target: minimal
     volumes:
-      - ./app:/app
       - ./config:/config:ro
       - ./backups:/backups
-    command: ["tail", "-f", "/dev/null"]
+    environment:
+      TZ: ${TZ:-UTC}
+    command: ["--help"]
+
+  # Development mode (full variant)
+  dev-full:
+    build:
+      context: .
+      target: full
+    volumes:
+      - ./config:/config:ro
+      - ./backups:/backups
+    environment:
+      TZ: ${TZ:-UTC}
+    command: ["--help"]

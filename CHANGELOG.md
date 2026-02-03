@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal Alpine base image
 - No build tools in production image
 - Read-only filesystem compatible
+- PHP hardening via custom ini (disable dangerous functions, secure defaults)
 
 ## [1.0.0] - Unreleased
 

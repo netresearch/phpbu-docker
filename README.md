@@ -35,6 +35,7 @@ docker pull ghcr.io/netresearch/phpbu-docker:full
   - Read-only filesystem compatible
   - Multi-stage build (no build tools in production)
   - Pinned base images for reproducibility
+  - PHP hardening (disabled dangerous functions, secure defaults)
 - **Supply chain security**:
   - Cosign-signed images with keyless OIDC
   - SBOM (Software Bill of Materials) included

@@ -4,3 +4,4 @@
 !/app/composer.json
 !/app/composer-full.json
 !/app/composer.lock
+!/app/php-hardening.ini

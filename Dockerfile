@@ -99,6 +99,9 @@ RUN composer install \
 # Final stage - minimal production image
 FROM base AS minimal
 
+# PHP security hardening
+COPY app/php-hardening.ini /usr/local/etc/php/conf.d/99-hardening.ini
+
 # OCI image labels
 LABEL org.opencontainers.image.title="phpbu-docker" \
       org.opencontainers.image.description="PHP Backup Utility Docker Image (minimal)" \
@@ -131,6 +134,9 @@ CMD ["--help"]
 #########################################
 # Final stage - full production image
 FROM base-full AS full
+
+# PHP security hardening
+COPY app/php-hardening.ini /usr/local/etc/php/conf.d/99-hardening.ini
 
 # OCI image labels
 LABEL org.opencontainers.image.title="phpbu-docker" \

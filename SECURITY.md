@@ -48,6 +48,7 @@ This project implements the following security practices:
 - Daily vulnerability scanning with Trivy (both variants)
 - No secrets in image layers
 - HEALTHCHECK for container health monitoring
+- PHP hardening (disabled: `dl`, `popen`, `show_source`, `highlight_file`)
 
 ### Supply Chain Security
 - Signed images with Cosign (keyless OIDC)

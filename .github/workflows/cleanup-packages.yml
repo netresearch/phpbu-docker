@@ -2,15 +2,6 @@ name: Cleanup Old Packages
 
 on:
   workflow_dispatch:
-    inputs:
-      dry_run:
-        description: 'Dry run (list but do not delete)'
-        required: true
-        default: 'true'
-        type: choice
-        options:
-          - 'true'
-          - 'false'
   schedule:
     # Run weekly on Sundays at 3am UTC
     - cron: '0 3 * * 0'
@@ -33,8 +24,6 @@ jobs:
           package-type: container
           min-versions-to-keep: 10
           delete-only-untagged-versions: true
-          # For scheduled runs, always delete. For manual, respect dry_run input
-          dry-run: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'true' }}
 
       - name: Summary
         run: |
@@ -43,8 +32,3 @@ jobs:
           echo "- Package: ${{ env.PACKAGE_NAME }}" >> $GITHUB_STEP_SUMMARY
           echo "- Kept minimum: 10 versions" >> $GITHUB_STEP_SUMMARY
           echo "- Deleted only untagged: true" >> $GITHUB_STEP_SUMMARY
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "- Dry run: ${{ github.event.inputs.dry_run }}" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "- Dry run: false (scheduled run)" >> $GITHUB_STEP_SUMMARY
-          fi

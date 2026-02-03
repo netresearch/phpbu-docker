@@ -122,23 +122,42 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build CI image
+      - name: Build CI images (minimal + full)
         uses: docker/bake-action@5be5f02ff8819ecd3092ea6b2e6261c31774f2b4 # v6
         with:
-          targets: ci
+          targets: ci,ci-full
           load: true
 
-      - name: Test image
+      - name: Test minimal image
         run: |
+          echo "## Testing minimal variant" >> $GITHUB_STEP_SUMMARY
           docker run --rm phpbu:ci --version
           docker run --rm phpbu:ci --help
 
-      - name: Run Trivy vulnerability scanner
+      - name: Test full image
+        run: |
+          echo "## Testing full variant" >> $GITHUB_STEP_SUMMARY
+          docker run --rm phpbu:ci-full --version
+          docker run --rm phpbu:ci-full --help
+          # Verify additional tools are present
+          docker run --rm --entrypoint which phpbu:ci-full rsync
+          docker run --rm --entrypoint which phpbu:ci-full gpg
+
+      - name: Run Trivy on minimal
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # v0.33.1
         with:
           image-ref: phpbu:ci
           format: 'sarif'
-          output: 'trivy-results.sarif'
+          output: 'trivy-minimal.sarif'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+
+      - name: Run Trivy on full
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # v0.33.1
+        with:
+          image-ref: phpbu:ci-full
+          format: 'sarif'
+          output: 'trivy-full.sarif'
           severity: 'CRITICAL,HIGH'
           exit-code: '1'
 
@@ -146,20 +165,25 @@ jobs:
         uses: github/codeql-action/upload-sarif@b20883b0cd1f46c72ae0ba6d1090936928f9fa30 # v4.32.0
         if: always()
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: 'trivy-minimal.sarif'
+          category: 'trivy-minimal'
 
-      - name: Build and push
+      - name: Upload Trivy scan results (full)
+        uses: github/codeql-action/upload-sarif@b20883b0cd1f46c72ae0ba6d1090936928f9fa30 # v4.32.0
+        if: always()
+        with:
+          sarif_file: 'trivy-full.sarif'
+          category: 'trivy-full'
+
+      - name: Build and push all variants
         if: github.event_name != 'pull_request'
         id: bake
         uses: docker/bake-action@5be5f02ff8819ecd3092ea6b2e6261c31774f2b4 # v6
         with:
-          targets: phpbu
+          targets: minimal,full
           push: true
           sbom: true
           provenance: mode=max
-          set: |
-            *.cache-from=type=gha
-            *.cache-to=type=gha,mode=max
         env:
           PHPBU_VERSION: ${{ steps.version.outputs.phpbu_version }}
           PHPBU_MINOR: ${{ steps.version.outputs.phpbu_minor }}
@@ -180,7 +204,12 @@ jobs:
           BUILD_DATE: ${{ steps.version.outputs.build_date }}
           GIT_SHA: ${{ steps.version.outputs.git_sha }}
         run: |
-          for tag in $(docker buildx bake --print 2>/dev/null | jq -r '.target.phpbu.tags[]'); do
+          # Sign minimal variant tags
+          for tag in $(docker buildx bake minimal --print 2>/dev/null | jq -r '.target.minimal.tags[]'); do
+            cosign sign --yes "$tag"
+          done
+          # Sign full variant tags
+          for tag in $(docker buildx bake full --print 2>/dev/null | jq -r '.target.full.tags[]'); do
             cosign sign --yes "$tag"
           done
 
@@ -193,8 +222,14 @@ jobs:
         run: |
           echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Image**: \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Tags**: \`$PHPBU_VERSION\`, \`$PHPBU_VERSION-$BUILD_DATE\`, \`$PHPBU_VERSION-$GIT_SHA\`, \`latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "### Minimal Variant" >> $GITHUB_STEP_SUMMARY
+          echo "**Image**: \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Tags**: \`$PHPBU_VERSION\`, \`minimal\`, \`latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Full Variant" >> $GITHUB_STEP_SUMMARY
+          echo "**Image**: \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:full\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Tags**: \`$PHPBU_VERSION-full\`, \`full\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Platforms**: linux/amd64, linux/arm64" >> $GITHUB_STEP_SUMMARY
           echo "**Signed**: Yes (Cosign keyless)" >> $GITHUB_STEP_SUMMARY
           echo "**SBOM**: Yes (SPDX)" >> $GITHUB_STEP_SUMMARY

@@ -9,6 +9,21 @@
 
 Production-ready Docker image for [phpbu](https://phpbu.de/) - PHP Backup Utility with comprehensive backup, sync, and cleanup capabilities.
 
+## Image Variants
+
+| Variant | Tag | Size | Use Case |
+|---------|-----|------|----------|
+| **Minimal** | `latest`, `minimal` | ~50MB | Database backups only |
+| **Full** | `full` | ~150MB | All sync adapters (S3, SFTP, Azure, etc.) |
+
+```bash
+# Minimal (recommended for most use cases)
+docker pull ghcr.io/netresearch/phpbu-docker:latest
+
+# Full (when you need cloud sync adapters)
+docker pull ghcr.io/netresearch/phpbu-docker:full
+```
+
 ## Features
 
 - **PHP 8.5** with security hardening
@@ -21,7 +36,7 @@ Production-ready Docker image for [phpbu](https://phpbu.de/) - PHP Backup Utilit
   - Daily vulnerability scanning (Trivy)
   - OpenSSF Scorecard monitoring
 - **Pre-configured** for MySQL, PostgreSQL, MongoDB, Redis backups
-- **Sync support** for S3, SFTP, Dropbox, Google Drive, Azure
+- **Sync support** for S3, SFTP, Dropbox, Google Drive, Azure (full variant)
 - **Read-only filesystem** compatible
 
 ## Quick Start
@@ -198,22 +213,35 @@ services:
 
 ### Supported Backup Sources
 
-| Type | Client | Package |
+| Type | Client | Variant |
 |------|--------|---------|
-| MySQL/MariaDB | `mysqldump` | mysql-client |
-| PostgreSQL | `pg_dump` | postgresql-client |
-| MongoDB | `mongodump` | mongodb-tools |
-| Redis | `redis-cli` | redis |
+| MySQL/MariaDB | `mysqldump` | minimal, full |
+| PostgreSQL | `pg_dump` | minimal, full |
+| MongoDB | `mongodump` | minimal, full |
+| Redis | `redis-cli` | minimal, full |
+| Tar archives | `tar` | minimal, full |
 
 ### Supported Sync Targets
 
-- Amazon S3 / S3-compatible (MinIO, Wasabi, etc.)
-- SFTP/SCP
-- Rsync
-- Dropbox
-- Google Drive
-- Azure Blob Storage
-- OpenStack Swift
+| Target | PHP Package | Variant |
+|--------|-------------|---------|
+| Amazon S3 / S3-compatible | `aws/aws-sdk-php` | **full** |
+| Google Cloud Storage | `google/cloud-storage` | **full** |
+| Azure Blob Storage | `microsoft/azure-storage-blob` | **full** |
+| SFTP | `phpseclib/phpseclib` | **full** |
+| FTP | `sebastianfeldmann/ftp` | **full** |
+| Dropbox | `kunalvarma05/dropbox-php-sdk` | **full** |
+| Rsync | system binary | **full** |
+| Local/NFS | - | minimal, full |
+
+### Additional Tools (full variant only)
+
+| Tool | Purpose |
+|------|---------|
+| `rsync` | Rsync sync target |
+| `gpg` | Encryption support |
+| `ssh` | SFTP/SCP connections |
+| `curl` | HTTP operations |
 
 ### Supported Cleanup Strategies
 
@@ -236,10 +264,16 @@ See the [examples/](examples/) directory:
 ### Local Build
 
 ```bash
-# Build for current platform (development)
+# Build minimal variant (development)
 docker buildx bake dev
 
-# Build for all platforms
+# Build minimal variant for all platforms
+docker buildx bake minimal
+
+# Build full variant for all platforms
+docker buildx bake full
+
+# Build all variants
 docker buildx bake
 
 # Print build configuration
@@ -307,18 +341,30 @@ See [SECURITY.md](SECURITY.md) for vulnerability reporting.
 
 ## Image Tags
 
-Tags are based on **phpbu version**, not PHP version:
+Tags are based on **phpbu version** and **variant**:
 
-| Tag | Description | Example |
-|-----|-------------|---------|
-| `latest` | Latest build | `latest` |
-| `6` | Latest phpbu 6.x | `6` |
-| `6.0` | Latest phpbu 6.0.x | `6.0` |
-| `6.0.30` | Specific phpbu version | `6.0.30` |
-| `6.0.30-2026-01-22` | Version + build date | Immutable |
-| `6.0.30-abc1234` | Version + git SHA | Immutable |
+### Minimal Variant (default)
 
-**Recommendation**: Use `6.0.30-2026-01-22` or `6.0.30-abc1234` for reproducible deployments.
+| Tag | Description |
+|-----|-------------|
+| `latest` | Latest minimal build |
+| `minimal` | Alias for latest minimal |
+| `6` | Latest phpbu 6.x (minimal) |
+| `6.0` | Latest phpbu 6.0.x (minimal) |
+| `6.0.30` | Specific phpbu version (minimal) |
+| `6.0.30-2026-01-22` | Version + build date (immutable) |
+| `6.0.30-abc1234` | Version + git SHA (immutable) |
+
+### Full Variant
+
+| Tag | Description |
+|-----|-------------|
+| `full` | Latest full build |
+| `6.0.30-full` | Specific version (full) |
+| `6.0.30-full-2026-01-22` | Version + build date (immutable) |
+| `6.0.30-full-abc1234` | Version + git SHA (immutable) |
+
+**Recommendation**: Use immutable tags (`6.0.30-2026-01-22` or `6.0.30-abc1234`) for reproducible deployments.
 
 ## Architecture Support
 

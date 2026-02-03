@@ -12,6 +12,15 @@ permissions: {}
 jobs:
   trivy:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        variant: [ci, ci-full]
+        include:
+          - variant: ci
+            name: minimal
+          - variant: ci-full
+            name: full
+    name: trivy (${{ matrix.name }})
     permissions:
       contents: read
       security-events: write
@@ -24,13 +33,13 @@ jobs:
       - name: Build image for scanning
         uses: docker/bake-action@5be5f02ff8819ecd3092ea6b2e6261c31774f2b4 # v6
         with:
-          targets: ci
+          targets: ${{ matrix.variant }}
           load: true
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # v0.33.1
         with:
-          image-ref: phpbu:ci
+          image-ref: phpbu:${{ matrix.variant }}
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
@@ -41,6 +50,7 @@ jobs:
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
+          category: 'trivy-${{ matrix.name }}'
 
   gitleaks:
     runs-on: ubuntu-latest

@@ -2,4 +2,5 @@
 /app/*
 !/app/backup.json
 !/app/composer.json
+!/app/composer-full.json
 !/app/composer.lock

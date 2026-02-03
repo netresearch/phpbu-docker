@@ -12,6 +12,15 @@ permissions:
 jobs:
   smoke-test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        variant: [ci, ci-full]
+        include:
+          - variant: ci
+            name: minimal
+          - variant: ci-full
+            name: full
+    name: smoke-test (${{ matrix.name }})
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
@@ -21,25 +30,25 @@ jobs:
       - name: Build test image
         uses: docker/bake-action@5be5f02ff8819ecd3092ea6b2e6261c31774f2b4 # v6
         with:
-          targets: ci
+          targets: ${{ matrix.variant }}
           load: true
 
       - name: Test phpbu version
         run: |
-          docker run --rm phpbu:ci --version
-          docker run --rm phpbu:ci --version | grep -E "^phpbu [0-9]+\.[0-9]+\.[0-9]+"
+          docker run --rm phpbu:${{ matrix.variant }} --version
+          docker run --rm phpbu:${{ matrix.variant }} --version | grep -E "^phpbu [0-9]+\.[0-9]+\.[0-9]+"
 
       - name: Test phpbu help
-        run: docker run --rm phpbu:ci --help | grep -q "backup"
+        run: docker run --rm phpbu:${{ matrix.variant }} --help | grep -q "backup"
 
       - name: Test non-root user
         run: |
-          USER=$(docker run --rm --entrypoint id phpbu:ci -u)
+          USER=$(docker run --rm --entrypoint id phpbu:${{ matrix.variant }} -u)
           test "$USER" = "1000" || (echo "Expected UID 1000, got $USER" && exit 1)
 
       - name: Test read-only filesystem compatibility
         run: |
-          docker run --rm --read-only --tmpfs /tmp:mode=1777 phpbu:ci --version
+          docker run --rm --read-only --tmpfs /tmp:mode=1777 phpbu:${{ matrix.variant }} --version
 
       - name: Test simulate mode
         run: |
@@ -70,9 +79,17 @@ jobs:
           docker run --rm \
             -v /tmp/test-config.json:/config/backup.json:ro \
             -v /tmp/backups:/backups \
-            phpbu:ci \
+            phpbu:${{ matrix.variant }} \
             --configuration=/config/backup.json \
             --simulate
+
+      - name: Test full variant extras
+        if: matrix.variant == 'ci-full'
+        run: |
+          echo "Testing additional tools in full variant..."
+          docker run --rm --entrypoint which phpbu:ci-full rsync
+          docker run --rm --entrypoint which phpbu:ci-full gpg
+          docker run --rm --entrypoint which phpbu:ci-full ssh
 
   structure-test:
     runs-on: ubuntu-latest

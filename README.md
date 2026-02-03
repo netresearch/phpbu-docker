@@ -26,18 +26,21 @@ docker pull ghcr.io/netresearch/phpbu-docker:full
 
 ## Features
 
-- **PHP 8.5** with security hardening
-- **Non-root execution** (UID 1000, no login shell)
+- **PHP 8.5** on minimal Alpine base
 - **Multi-architecture** support (amd64, arm64)
-- **Security-first design**:
+- **Pre-configured** for MySQL, PostgreSQL, MongoDB, Redis backups
+- **Sync support** for S3, SFTP, Dropbox, Google Drive, Azure (full variant)
+- **Container security**:
+  - Non-root execution (UID 1000, no login shell)
+  - Read-only filesystem compatible
+  - Multi-stage build (no build tools in production)
+  - Pinned base images for reproducibility
+- **Supply chain security**:
   - Cosign-signed images with keyless OIDC
   - SBOM (Software Bill of Materials) included
   - SLSA Build Level 3 provenance attestation
   - Daily vulnerability scanning (Trivy)
   - OpenSSF Scorecard monitoring
-- **Pre-configured** for MySQL, PostgreSQL, MongoDB, Redis backups
-- **Sync support** for S3, SFTP, Dropbox, Google Drive, Azure (full variant)
-- **Read-only filesystem** compatible
 
 ## Quick Start
 

@@ -349,9 +349,9 @@ Tags are based on **phpbu version** and **variant**:
 |-----|-------------|
 | `latest` | Latest minimal build |
 | `minimal` | Alias for latest minimal |
-| `6` | Latest phpbu 6.x (minimal) |
-| `6.0` | Latest phpbu 6.0.x (minimal) |
-| `6.0.30` | Specific phpbu version (minimal) |
+| `6`, `6-minimal` | Latest phpbu 6.x (minimal) |
+| `6.0`, `6.0-minimal` | Latest phpbu 6.0.x (minimal) |
+| `6.0.30`, `6.0.30-minimal` | Specific phpbu version (minimal) |
 | `6.0.30-2026-01-22` | Version + build date (immutable) |
 | `6.0.30-abc1234` | Version + git SHA (immutable) |
 
@@ -360,11 +360,13 @@ Tags are based on **phpbu version** and **variant**:
 | Tag | Description |
 |-----|-------------|
 | `full` | Latest full build |
+| `6-full` | Latest phpbu 6.x (full) |
+| `6.0-full` | Latest phpbu 6.0.x (full) |
 | `6.0.30-full` | Specific version (full) |
 | `6.0.30-full-2026-01-22` | Version + build date (immutable) |
 | `6.0.30-full-abc1234` | Version + git SHA (immutable) |
 
-**Recommendation**: Use immutable tags (`6.0.30-2026-01-22` or `6.0.30-abc1234`) for reproducible deployments.
+**Recommendation**: Use immutable tags (`6.0.30-2026-01-22` or `6.0.30-full-abc1234`) for reproducible deployments.
 
 ## Architecture Support
 

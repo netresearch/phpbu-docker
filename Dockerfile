@@ -37,6 +37,9 @@ RUN apk --no-cache add \
         curl && \
     rm -rf /var/cache/apk/* /tmp/*
 
+# Install PHP FTP extension for FTP sync adapter
+RUN docker-php-ext-install ftp
+
 #########################################
 # Build stage - compile dependencies (minimal)
 FROM base AS build-minimal
@@ -70,6 +73,9 @@ FROM base-full AS build-full
 # Composer in build stage only (not in final image)
 ENV COMPOSER_ALLOW_SUPERUSER=1 \
     COMPOSER_HOME=/tmp/composer
+
+# Install PHP FTP extension required by sebastianfeldmann/ftp
+RUN docker-php-ext-install ftp
 
 # Install Composer from official image (pinned for reproducibility)
 COPY --from=composer:2@sha256:c404e6f07bdebf8a8c605be5b5fab88eef737f6e4acfba3651d39c824ce224d4 /usr/bin/composer /usr/bin/composer

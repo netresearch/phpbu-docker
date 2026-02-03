@@ -60,8 +60,11 @@ target "minimal" {
   # Tags: version-based + latest + minimal
   tags = compact([
     "${REGISTRY}/${REPO}:${PHPBU_MAJOR}",
+    "${REGISTRY}/${REPO}:${PHPBU_MAJOR}-minimal",
     "${REGISTRY}/${REPO}:${PHPBU_MINOR}",
+    "${REGISTRY}/${REPO}:${PHPBU_MINOR}-minimal",
     "${REGISTRY}/${REPO}:${PHPBU_VERSION}",
+    "${REGISTRY}/${REPO}:${PHPBU_VERSION}-minimal",
     notequal("", BUILD_DATE) ? "${REGISTRY}/${REPO}:${PHPBU_VERSION}-${BUILD_DATE}" : "",
     notequal("", GIT_SHA) ? "${REGISTRY}/${REPO}:${PHPBU_VERSION}-${GIT_SHA}" : "",
     "${REGISTRY}/${REPO}:latest",
@@ -103,6 +106,8 @@ target "full" {
 
   # Tags: full-specific tags
   tags = compact([
+    "${REGISTRY}/${REPO}:${PHPBU_MAJOR}-full",
+    "${REGISTRY}/${REPO}:${PHPBU_MINOR}-full",
     "${REGISTRY}/${REPO}:${PHPBU_VERSION}-full",
     notequal("", BUILD_DATE) ? "${REGISTRY}/${REPO}:${PHPBU_VERSION}-full-${BUILD_DATE}" : "",
     notequal("", GIT_SHA) ? "${REGISTRY}/${REPO}:${PHPBU_VERSION}-full-${GIT_SHA}" : "",

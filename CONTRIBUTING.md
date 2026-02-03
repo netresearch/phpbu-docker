@@ -107,19 +107,29 @@ flowchart LR
 # Validate bake configuration
 docker buildx bake --print
 
-# Build CI target
+# Build minimal variant (CI target)
 docker buildx bake ci
 
-# Run basic tests
+# Build full variant (CI target)
+docker buildx bake ci-full
+
+# Run basic tests (minimal)
 docker run --rm phpbu:ci --version
 docker run --rm phpbu:ci --help
+
+# Run basic tests (full)
+docker run --rm phpbu:ci-full --version
+docker run --rm phpbu:ci-full which rsync gpg ssh
 ```
 
 ### Security Scanning
 
 ```bash
-# Run Trivy locally
+# Run Trivy locally (minimal variant)
 docker run --rm aquasec/trivy image phpbu:ci
+
+# Run Trivy locally (full variant)
+docker run --rm aquasec/trivy image phpbu:ci-full
 ```
 
 ### Lint Dockerfile

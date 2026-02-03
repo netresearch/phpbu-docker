@@ -43,9 +43,11 @@ This project implements the following security practices:
 ### Image Security
 - Non-root user execution (UID 1000)
 - Minimal Alpine-based image
+- Two variants: `minimal` (~50MB) and `full` (~150MB)
 - Multi-stage builds (no build tools in production)
-- Daily vulnerability scanning with Trivy
+- Daily vulnerability scanning with Trivy (both variants)
 - No secrets in image layers
+- HEALTHCHECK for container health monitoring
 
 ### Supply Chain Security
 - Signed images with Cosign (keyless OIDC)

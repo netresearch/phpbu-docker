@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Initial Docker image for phpbu 6.0.x
+- **Image variants**: `minimal` (~50MB) and `full` (~150MB) with all sync adapters
 - Multi-architecture support (amd64, arm64)
 - Multi-stage Dockerfile with security hardening
 - Non-root user execution (UID 1000)
@@ -22,6 +23,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub Actions CI/CD workflows
 - Weekly security rebuilds
 - CODEOWNERS for code review enforcement
+- HEALTHCHECK for container health monitoring
+- Version-specific variant tags (e.g., `6.0-minimal`, `6.0-full`)
+
+### Full Variant Includes
+- AWS S3 SDK (`aws/aws-sdk-php`)
+- Google Cloud Storage (`google/cloud-storage`)
+- Azure Blob Storage (`microsoft/azure-storage-blob`)
+- SFTP support (`phpseclib/phpseclib`)
+- FTP support (`sebastianfeldmann/ftp` + ext-ftp)
+- Dropbox SDK (`kunalvarma05/dropbox-php-sdk`)
+- Additional tools: rsync, gnupg, openssh-client, curl
 
 ### Security
 - All GitHub Actions pinned to SHA for supply chain security

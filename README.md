@@ -255,9 +255,11 @@ services:
 
 See the [examples/](examples/) directory:
 
-- [`mysql-backup.json`](examples/mysql-backup.json) - MySQL database backup
-- [`postgres-backup.json`](examples/postgres-backup.json) - PostgreSQL database backup
-- [`s3-sync.json`](examples/s3-sync.json) - File backup with S3 sync
+| Example | Description | Required Variant |
+|---------|-------------|------------------|
+| [`mysql-backup.json`](examples/mysql-backup.json) | MySQL database backup | `minimal` or `full` |
+| [`postgres-backup.json`](examples/postgres-backup.json) | PostgreSQL database backup | `minimal` or `full` |
+| [`s3-sync.json`](examples/s3-sync.json) | File backup with S3 sync | **`full`** |
 
 ## Building
 

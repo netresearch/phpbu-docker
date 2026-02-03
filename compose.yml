@@ -33,6 +33,14 @@ services:
       - ./backups:/backups
     environment:
       TZ: ${TZ:-UTC}
+    # Security hardening (same as production)
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp:mode=1777,size=64M,noexec,nosuid,nodev
     command: ["--help"]
 
   # Development mode (full variant)
@@ -45,4 +53,12 @@ services:
       - ./backups:/backups
     environment:
       TZ: ${TZ:-UTC}
+    # Security hardening (same as production)
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp:mode=1777,size=64M,noexec,nosuid,nodev
     command: ["--help"]

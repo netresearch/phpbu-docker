@@ -74,8 +74,7 @@ FROM base-full AS build-full
 ENV COMPOSER_ALLOW_SUPERUSER=1 \
     COMPOSER_HOME=/tmp/composer
 
-# Install PHP FTP extension required by sebastianfeldmann/ftp
-RUN docker-php-ext-install ftp
+# Note: PHP FTP extension already installed in base-full stage
 
 # Install Composer from official image (pinned for reproducibility)
 COPY --from=composer:2@sha256:c404e6f07bdebf8a8c605be5b5fab88eef737f6e4acfba3651d39c824ce224d4 /usr/bin/composer /usr/bin/composer

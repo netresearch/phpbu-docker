@@ -19,16 +19,22 @@
     ],
     "enabled": true
   },
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 6am on monday"]
+  },
+  "platformAutomerge": true,
+  "automergeType": "pr",
   "packageRules": [
     {
       "description": "Auto-merge minor and patch updates",
       "matchUpdateTypes": [
         "minor",
-        "patch"
+        "patch",
+        "pin",
+        "digest"
       ],
-      "automerge": true,
-      "automergeType": "pr",
-      "automergeStrategy": "squash"
+      "automerge": true
     },
     {
       "description": "Group Docker updates",
@@ -68,6 +74,5 @@
       ],
       "datasourceTemplate": "docker"
     }
-  ],
-  "platformAutomerge": false
+  ]
 }

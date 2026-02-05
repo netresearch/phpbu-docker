@@ -32,13 +32,14 @@ jobs:
       - name: Auto-merge safe updates
         # Auto-merge for Renovate (all minor/patch via renovate.json config)
         # Auto-merge for Dependabot: semver minor/patch OR Docker updates (except major)
+        # Uses --rebase because branch protection requires linear history
         if: |
           github.event.pull_request.user.login == 'renovate[bot]' ||
           steps.metadata.outputs.update-type == 'version-update:semver-minor' ||
           steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
           (steps.metadata.outputs.package-ecosystem == 'docker' &&
            steps.metadata.outputs.update-type != 'version-update:semver-major')
-        run: gh pr merge --auto --merge "$PR_URL"
+        run: gh pr merge --auto --rebase "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

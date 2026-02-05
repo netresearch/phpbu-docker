@@ -7,6 +7,7 @@ on:
     branches: [main]
   schedule:
     - cron: '0 6 * * 1'  # Weekly security rebuild
+  workflow_dispatch:  # Allow manual trigger
 
 permissions: {}
 
@@ -15,73 +16,12 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  update-deps:
-    # Only update deps on push to main or scheduled runs, not PRs
-    if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    outputs:
-      sha: ${{ steps.update.outputs.sha }}
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@44454db4f0199b8b9685a5d763dc37cbf79108e1 # v2.36.0
-        with:
-          php-version: '8.5'
-          tools: composer:v2
-
-      - name: Update composer dependencies
-        id: update
-        run: |
-          cd app
-
-          # Update minimal variant
-          echo "Updating minimal variant dependencies..."
-          composer update
-
-          # Update full variant
-          echo "Updating full variant dependencies..."
-          cp composer.json composer.json.bak
-          cp composer.lock composer.lock.bak
-          cp composer-full.json composer.json
-          cp composer-full.lock composer.lock
-          composer update
-          mv composer.json composer-full.json
-          mv composer.lock composer-full.lock
-          mv composer.json.bak composer.json
-          mv composer.lock.bak composer.lock
-
-          cd ..
-
-          # Stage both lock files
-          git add app/composer.lock app/composer-full.lock
-
-          if git diff --staged --quiet; then
-            echo "No dependency updates"
-            echo "sha=${{ github.sha }}" >> $GITHUB_OUTPUT
-          else
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git commit -m "chore(deps): update composer.lock and composer-full.lock"
-            git push
-            NEW_SHA=$(git rev-parse HEAD)
-            echo "sha=$NEW_SHA" >> $GITHUB_OUTPUT
-            echo "Dependencies updated and committed: $NEW_SHA"
-          fi
-
   lint:
-    needs: [update-deps]
-    if: always() && !cancelled() && !failure()
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          # Use updated SHA from update-deps if available, otherwise triggering SHA
-          ref: ${{ needs.update-deps.outputs.sha || github.sha }}
 
       - name: Lint Dockerfile
         uses: hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5 # v3.3.0
@@ -95,8 +35,7 @@ jobs:
         run: docker buildx bake --print
 
   build:
-    needs: [lint, update-deps]
-    if: always() && needs.lint.result == 'success'
+    needs: [lint]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -107,9 +46,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          # Use updated SHA from update-deps if available, otherwise triggering SHA
-          ref: ${{ needs.update-deps.outputs.sha || github.sha }}
 
       - name: Extract phpbu version from composer.lock
         id: version
@@ -137,7 +73,7 @@ jobs:
 
       - name: Log in to GHCR
         if: github.event_name != 'pull_request'
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}

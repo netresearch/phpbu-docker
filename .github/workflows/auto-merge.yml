@@ -1,7 +1,9 @@
-name: Auto-merge Dependabot
+# Auto-merge dependency updates using GitHub's native auto-merge
+# Requires branch protection with required status checks enabled
+name: Auto-merge dependency PRs
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened]
 
 permissions: {}
@@ -9,25 +11,34 @@ permissions: {}
 jobs:
   auto-merge:
     runs-on: ubuntu-latest
-    if: github.actor == 'dependabot[bot]'
+    if: github.event.pull_request.user.login == 'dependabot[bot]' || github.event.pull_request.user.login == 'renovate[bot]'
     permissions:
       contents: write
       pull-requests: write
     steps:
       - name: Dependabot metadata
         id: metadata
+        if: github.event.pull_request.user.login == 'dependabot[bot]'
         uses: dependabot/fetch-metadata@21025c705c08248db411dc16f3619e6b5f9ea21a # v2.3.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Auto-approve PR
+        run: gh pr review --approve "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Auto-merge safe updates
-        # Auto-merge: semver minor/patch (any ecosystem) OR Docker updates (except major)
+        # Auto-merge for Renovate (all minor/patch via renovate.json config)
+        # Auto-merge for Dependabot: semver minor/patch OR Docker updates (except major)
         if: |
+          github.event.pull_request.user.login == 'renovate[bot]' ||
           steps.metadata.outputs.update-type == 'version-update:semver-minor' ||
           steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
           (steps.metadata.outputs.package-ecosystem == 'docker' &&
            steps.metadata.outputs.update-type != 'version-update:semver-major')
-        run: gh pr merge --auto --squash "$PR_URL"
+        run: gh pr merge --auto --merge "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -10,6 +10,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Runtime timezone support via `TZ` environment variable (sets PHP `date.timezone` at startup)
 - Entrypoint wrapper script with TZ input validation
 
+### Fixed
+- Full variant composer files (`composer-full.json`) invisible to Renovate and Dependabot; moved to `app/full/composer.json` for native auto-update support
+
 ## 2026-02-05
 
 ### Changed

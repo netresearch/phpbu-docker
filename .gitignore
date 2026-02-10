@@ -2,8 +2,9 @@
 /app/*
 !/app/backup.json
 !/app/composer.json
-!/app/composer-full.json
 !/app/composer.lock
-!/app/composer-full.lock
+!/app/full/
+!/app/full/composer.json
+!/app/full/composer.lock
 !/app/php-hardening.ini
 !/app/docker-entrypoint.sh

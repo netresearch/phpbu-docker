@@ -8,29 +8,28 @@
     "packages": [
         {
             "name": "phpbu/phpbu",
-            "version": "6.0.30",
+            "version": "6.0.31",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianfeldmann/phpbu.git",
-                "reference": "6dd994b722dcdf5f289dafd92766babc0f25b617"
+                "reference": "c912ca6029e22b66300e7424cb1a55b52fa021e9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianfeldmann/phpbu/zipball/6dd994b722dcdf5f289dafd92766babc0f25b617",
-                "reference": "6dd994b722dcdf5f289dafd92766babc0f25b617",
+                "url": "https://api.github.com/repos/sebastianfeldmann/phpbu/zipball/c912ca6029e22b66300e7424cb1a55b52fa021e9",
+                "reference": "c912ca6029e22b66300e7424cb1a55b52fa021e9",
                 "shasum": ""
             },
             "require": {
                 "ext-dom": "*",
                 "ext-json": "*",
                 "ext-spl": "*",
-                "php": ">=8.0",
+                "php": ">=8.1",
                 "sebastian/environment": "^3.0|^4.0|^5.0|^6.0|^7.0|^8.0",
                 "sebastianfeldmann/cli": "^3.4",
                 "symfony/process": "^3.0|^4.0|^5.0|^6.0|^7.0"
             },
             "require-dev": {
-                "arhitector/yandex": "^2.0",
                 "aws/aws-sdk-php": "^3.10",
                 "google/apiclient": "^2.7",
                 "google/cloud-storage": "^1.42",
@@ -46,7 +45,6 @@
                 "vlucas/phpdotenv": "^4.0"
             },
             "suggest": {
-                "arhitector/yandex": "Require ^2.0 to sync to Yandex Disk",
                 "aws/aws-sdk-php": "Require '^3.10' to sync to Amazon S3",
                 "google/apiclient": "Require ^2.0 to sync to Google Drive",
                 "google/cloud-storage": "Require ^1.42 to sync to Google Cloud Storage",
@@ -102,7 +100,7 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianfeldmann/phpbu/issues",
-                "source": "https://github.com/sebastianfeldmann/phpbu/tree/6.0.30"
+                "source": "https://github.com/sebastianfeldmann/phpbu/tree/6.0.31"
             },
             "funding": [
                 {
@@ -110,7 +108,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-06-18T14:12:27+00:00"
+            "time": "2026-02-04T22:58:58+00:00"
         },
         {
             "name": "sebastian/environment",
@@ -322,5 +320,5 @@
         "php": ">=8.5"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.6.0"
 }

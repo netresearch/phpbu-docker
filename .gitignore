@@ -6,3 +6,4 @@
 !/app/composer.lock
 !/app/composer-full.lock
 !/app/php-hardening.ini
+!/app/docker-entrypoint.sh

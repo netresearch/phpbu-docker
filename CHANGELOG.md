@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Runtime timezone support via `TZ` environment variable (sets PHP `date.timezone` at startup)
+- Entrypoint wrapper script for runtime configuration
 - Initial Docker image for phpbu 6.0.x
 - **Image variants**: `minimal` (~50MB) and `full` (~150MB) with all sync adapters
 - Multi-architecture support (amd64, arm64)

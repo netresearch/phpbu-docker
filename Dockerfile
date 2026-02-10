@@ -80,8 +80,8 @@ ENV COMPOSER_ALLOW_SUPERUSER=1 \
 COPY --from=composer:2@sha256:c404e6f07bdebf8a8c605be5b5fab88eef737f6e4acfba3651d39c824ce224d4 /usr/bin/composer /usr/bin/composer
 
 # Copy full variant dependency files
-COPY --chown=phpbu:phpbu app/composer-full.json ./composer.json
-COPY --chown=phpbu:phpbu app/composer-full.lock ./composer.lock
+COPY --chown=phpbu:phpbu app/full/composer.json ./composer.json
+COPY --chown=phpbu:phpbu app/full/composer.lock ./composer.lock
 
 # Install dependencies with optimization
 RUN composer install \

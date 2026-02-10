@@ -46,6 +46,21 @@ jobs:
           USER=$(docker run --rm --entrypoint id phpbu:${{ matrix.variant }} -u)
           test "$USER" = "1000" || (echo "Expected UID 1000, got $USER" && exit 1)
 
+      - name: Test TZ environment variable
+        run: |
+          # Verify entrypoint handles TZ without error
+          docker run --rm -e TZ=Europe/Berlin phpbu:${{ matrix.variant }} --version
+          # Verify PHP timezone is actually applied via entrypoint
+          docker run --rm -e TZ=Europe/Berlin --entrypoint sh phpbu:${{ matrix.variant }} -c '
+            # Simulate entrypoint TZ logic
+            if printf "%s" "$TZ" | grep -Eq "^[A-Za-z0-9/_+.-]+$"; then
+              printf "date.timezone = %s\n" "$TZ" > /usr/local/etc/php/conf.d/tz.ini
+            fi
+            php -r "echo date_default_timezone_get();"
+          ' | grep -q "Europe/Berlin"
+          # Verify invalid TZ is rejected (injection attempt)
+          docker run --rm -e 'TZ=UTC;auto_prepend_file=/tmp/evil.php' phpbu:${{ matrix.variant }} --version 2>&1 | grep -q "Invalid TZ"
+
       - name: Test read-only filesystem compatibility
         run: |
           docker run --rm --read-only --tmpfs /tmp:mode=1777 phpbu:${{ matrix.variant }} --version

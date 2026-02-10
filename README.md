@@ -206,7 +206,16 @@ services:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `TZ` | Timezone | `UTC` |
+| `TZ` | Sets PHP `date.timezone` at container startup. Affects log timestamps and date-based backup filenames (e.g., `%Y%m%d` patterns). | `UTC` |
+
+> **Note**: `TZ` is not compatible with `read_only: true` because the entrypoint writes
+> a PHP config file at startup. For read-only containers, set the timezone at build time
+> in a derived Dockerfile instead:
+>
+> ```dockerfile
+> FROM ghcr.io/netresearch/phpbu-docker:latest
+> RUN printf 'date.timezone = Europe/Berlin\n' > /usr/local/etc/php/conf.d/tz.ini
+> ```
 
 ### Volume Mounts
 

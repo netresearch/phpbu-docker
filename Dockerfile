@@ -115,8 +115,13 @@ LABEL org.opencontainers.image.title="phpbu-docker" \
 # Copy built application from build stage
 COPY --from=build-minimal --chown=phpbu:phpbu /app /app
 
+# Copy entrypoint script (not in build stage, must be copied separately)
+COPY --chmod=755 --chown=phpbu:phpbu app/docker-entrypoint.sh /app/docker-entrypoint.sh
+
 # Create directories with correct permissions
-RUN mkdir -p /backups && chown phpbu:phpbu /backups
+# tz.ini owned by phpbu so entrypoint can set timezone from TZ env var
+RUN mkdir -p /backups && chown phpbu:phpbu /backups && \
+    touch /usr/local/etc/php/conf.d/tz.ini && chown phpbu:phpbu /usr/local/etc/php/conf.d/tz.ini
 
 # Security: Switch to non-root user
 USER phpbu
@@ -128,7 +133,7 @@ VOLUME ["/backups"]
 HEALTHCHECK --interval=60s --timeout=10s --start-period=5s --retries=3 \
     CMD ["/app/vendor/bin/phpbu", "--version"]
 
-ENTRYPOINT ["/app/vendor/bin/phpbu"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["--help"]
 
 #########################################
@@ -151,8 +156,13 @@ LABEL org.opencontainers.image.title="phpbu-docker" \
 # Copy built application from build stage
 COPY --from=build-full --chown=phpbu:phpbu /app /app
 
+# Copy entrypoint script (not in build stage, must be copied separately)
+COPY --chmod=755 --chown=phpbu:phpbu app/docker-entrypoint.sh /app/docker-entrypoint.sh
+
 # Create directories with correct permissions
-RUN mkdir -p /backups && chown phpbu:phpbu /backups
+# tz.ini owned by phpbu so entrypoint can set timezone from TZ env var
+RUN mkdir -p /backups && chown phpbu:phpbu /backups && \
+    touch /usr/local/etc/php/conf.d/tz.ini && chown phpbu:phpbu /usr/local/etc/php/conf.d/tz.ini
 
 # Security: Switch to non-root user
 USER phpbu
@@ -164,5 +174,5 @@ VOLUME ["/backups"]
 HEALTHCHECK --interval=60s --timeout=10s --start-period=5s --retries=3 \
     CMD ["/app/vendor/bin/phpbu", "--version"]
 
-ENTRYPOINT ["/app/vendor/bin/phpbu"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["--help"]

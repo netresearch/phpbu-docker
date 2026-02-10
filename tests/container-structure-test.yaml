@@ -3,12 +3,17 @@ schemaVersion: 2.0.0
 metadataTest:
   user: "phpbu"
   workdir: "/app"
-  entrypoint: ["/app/vendor/bin/phpbu"]
+  entrypoint: ["/app/docker-entrypoint.sh"]
   cmd: ["--help"]
   exposedPorts: []
   volumes: ["/backups"]
 
 fileExistenceTests:
+  - name: "docker-entrypoint.sh exists"
+    path: "/app/docker-entrypoint.sh"
+    shouldExist: true
+    permissions: "-rwxr-xr-x"
+
   - name: "phpbu binary exists"
     path: "/app/vendor/bin/phpbu"
     shouldExist: true
@@ -28,6 +33,10 @@ fileExistenceTests:
     shouldExist: false
 
 fileContentTests:
+  - name: "entrypoint contains timezone logic"
+    path: "/app/docker-entrypoint.sh"
+    expectedContents: ["#!/bin/sh", "date.timezone", "grep -Eq", "exec /app/vendor/bin/phpbu"]
+
   - name: "phpbu is executable PHP"
     path: "/app/vendor/bin/phpbu"
     expectedContents: ["#!/usr/bin/env php"]
@@ -87,6 +96,21 @@ commandTests:
     command: "find"
     args: ["/app", "-user", "root", "-perm", "-002", "-type", "f"]
     expectedOutput: []
+    exitCode: 0
+
+  - name: "tz.ini writable by phpbu user"
+    command: "sh"
+    args: ["-c", "echo 'date.timezone = Europe/Berlin' > /usr/local/etc/php/conf.d/tz.ini && grep -q 'Europe/Berlin' /usr/local/etc/php/conf.d/tz.ini"]
+    exitCode: 0
+
+  - name: "tz.ini exists and is empty by default"
+    command: "sh"
+    args: ["-c", "test -f /usr/local/etc/php/conf.d/tz.ini && test ! -s /usr/local/etc/php/conf.d/tz.ini"]
+    exitCode: 0
+
+  - name: "conf.d not writable by phpbu user"
+    command: "sh"
+    args: ["-c", "! touch /usr/local/etc/php/conf.d/test-write.ini 2>/dev/null"]
     exitCode: 0
 
   - name: "No setuid binaries in common paths"

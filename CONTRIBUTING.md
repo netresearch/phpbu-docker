@@ -166,7 +166,7 @@ Releases are automated via GitHub Actions:
 
 - **Issues**: [GitHub Issues](https://github.com/netresearch/phpbu-docker/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/netresearch/phpbu-docker/discussions)
-- **Security**: security@netresearch.de
+- **Security**: [GitHub Security Advisories](https://github.com/netresearch/phpbu-docker/security/advisories/new)
 
 ## License
 

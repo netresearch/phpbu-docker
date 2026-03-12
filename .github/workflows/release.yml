@@ -46,7 +46,7 @@ jobs:
           echo "git_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Build and push (both variants)
-        uses: docker/bake-action@5be5f02ff8819ecd3092ea6b2e6261c31774f2b4 # v6
+        uses: docker/bake-action@82490499d2e5613fcead7e128237ef0b0ea210f7 # v7.0.0
         with:
           targets: minimal,full
           push: true

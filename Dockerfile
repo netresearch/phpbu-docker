@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.22
+# syntax=docker/dockerfile:1.23
 #########################################
 # Base stage - minimal runtime dependencies
 # Pin to digest for supply chain security (renovate will update)

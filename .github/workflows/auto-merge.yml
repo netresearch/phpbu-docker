@@ -1,45 +1,20 @@
-# Auto-merge dependency updates using GitHub's native auto-merge
-# Requires branch protection with required status checks enabled
+# Auto-merge dependency updates using the org-level reusable workflow.
+# safe-updates-only: true restricts auto-merge to semver minor/patch
+# (and Docker non-major) — majors are approved but left for human review.
+# merge-strategy: rebase preserves this repo's required_linear_history.
 name: Auto-merge dependency PRs
 
 on:
   pull_request_target:
-    types: [opened, synchronize, reopened]
 
 permissions: {}
 
 jobs:
   auto-merge:
-    runs-on: ubuntu-latest
-    if: github.event.pull_request.user.login == 'dependabot[bot]' || github.event.pull_request.user.login == 'renovate[bot]'
+    uses: netresearch/.github/.github/workflows/auto-merge-deps.yml@main
+    with:
+      safe-updates-only: true
+      merge-strategy: rebase
     permissions:
       contents: write
       pull-requests: write
-    steps:
-      - name: Dependabot metadata
-        id: metadata
-        if: github.event.pull_request.user.login == 'dependabot[bot]'
-        uses: dependabot/fetch-metadata@ffa630c65fa7e0ecfa0625b5ceda64399aea1b36 # v3.0.0
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Auto-approve PR
-        run: gh pr review --approve "$PR_URL"
-        env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Auto-merge safe updates
-        # Auto-merge for Renovate (all minor/patch via renovate.json config)
-        # Auto-merge for Dependabot: semver minor/patch OR Docker updates (except major)
-        # Uses --rebase because branch protection requires linear history
-        if: |
-          github.event.pull_request.user.login == 'renovate[bot]' ||
-          steps.metadata.outputs.update-type == 'version-update:semver-minor' ||
-          steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
-          (steps.metadata.outputs.package-ecosystem == 'docker' &&
-           steps.metadata.outputs.update-type != 'version-update:semver-major')
-        run: gh pr merge --auto --rebase "$PR_URL"
-        env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -11,7 +11,7 @@ permissions: {}
 
 jobs:
   auto-merge:
-    uses: netresearch/.github/.github/workflows/auto-merge-deps.yml@ba95ac9982d85e5ee7c2aa7b48fdb7f0221cd860 # main
+    uses: netresearch/.github/.github/workflows/auto-merge-deps.yml@724593d64a267302114aa9e26d0ac7b209b327ce # main
     with:
       safe-updates-only: true
       merge-strategy: rebase

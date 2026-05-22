@@ -16,26 +16,18 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Lint Dockerfile
-        uses: hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5 # v3.3.0
-        with:
-          dockerfile: Dockerfile
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
-
-      - name: Validate bake file
-        run: docker buildx bake --print
-
   build:
-    needs: [lint]
+    # Dockerfile lint (hadolint) and bake-graph validation moved to
+    # .github/workflows/lint.yml — the hadolint piece now delegates to
+    # netresearch/.github's reusable lint-container.yml. The bake-graph
+    # check stays inline there because the reusable model is single-target
+    # docker/build-push-action, not bake. This `build` job likewise stays
+    # inline: the bake multi-target shape (minimal + full variants from
+    # docker-bake.hcl with shared cache and combined tag fan-out) doesn't
+    # map onto build-container.yml's single-target shape, and a
+    # bake-to-matrix refactor would either duplicate the tag fan-out into
+    # `metadata-tags` for two parallel reusable calls or abandon
+    # docker-bake.hcl entirely. Both invasive; flagged as upstream follow-up.
     runs-on: ubuntu-latest
     permissions:
       contents: read

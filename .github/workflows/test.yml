@@ -106,26 +106,22 @@ jobs:
           docker run --rm --entrypoint which phpbu:ci-full gpg
           docker run --rm --entrypoint which phpbu:ci-full ssh
 
+  # The previous `structure-test` job (inline bake + container-structure-test
+  # download + run) now delegates to netresearch/.github's reusable
+  # smoke-test-container.yml. The reusable builds via docker/build-push-action
+  # rather than bake — equivalent here because the bake `ci` target is just
+  # `target = "minimal"` with `platforms = ["linux/amd64"]` and a local
+  # `phpbu:ci` tag, which the reusable replicates verbatim via `target:` +
+  # `image-tag:`. The `smoke-test` matrix job above stays inline: it covers
+  # phpbu-specific surface (TZ env-var sanitisation, read-only fs, simulate
+  # mode with a fixture config) that's outside the reusable's structure-test
+  # scope.
   structure-test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
-
-      - name: Build test image
-        uses: docker/bake-action@a66e1c87e2eca0503c343edf1d208c716d54b8a8 # v7.1.0
-        with:
-          targets: ci
-          load: true
-
-      - name: Install container-structure-test
-        run: |
-          curl -LO https://github.com/GoogleContainerTools/container-structure-test/releases/download/v1.19.3/container-structure-test-linux-amd64
-          echo "fa0fa333bb6ba5c14065e7468d2904f5c82d021d7e1c763c9a45c5f2fbe9ff5f  container-structure-test-linux-amd64" | sha256sum -c -
-          chmod +x container-structure-test-linux-amd64
-          sudo mv container-structure-test-linux-amd64 /usr/local/bin/container-structure-test
-
-      - name: Run structure tests
-        run: container-structure-test test --image phpbu:ci --config tests/container-structure-test.yaml
+    uses: netresearch/.github/.github/workflows/smoke-test-container.yml@main
+    permissions:
+      contents: read
+    with:
+      image-tag: phpbu:ci
+      target: minimal
+      cst-config-path: tests/container-structure-test.yaml
+      cache-scope: structure-test

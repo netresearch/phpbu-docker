@@ -1,36 +1,38 @@
-name: OpenSSF Scorecard
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Netresearch DTT GmbH
+#
+# OpenSSF Scorecard — supply-chain security health check.
+# Delegates to the org-wide reusable in netresearch/.github.
+# Runs weekly against main and uploads SARIF to GitHub code-scanning.
+# Results also surface on the OpenSSF Scorecard public dashboard
+# (https://securityscorecards.dev/) once enabled.
+
+name: scorecard
 
 on:
   branch_protection_rule:
   schedule:
-    - cron: '0 6 * * 1'  # Weekly on Monday
+    - cron: '0 6 * * 1'   # weekly, Monday 06:00 UTC
   push:
     branches: [main]
+  workflow_dispatch:
 
-permissions: read-all
+# Top-level permissions explicitly enumerated (SonarCloud rule
+# githubactions:S8234). The reusable's job requests its own
+# additional permissions via its own permissions block; this minimum
+# lets supporting tooling read metadata without granting writes.
+permissions:
+  contents: read
 
 jobs:
   analysis:
     name: Scorecard analysis
-    runs-on: ubuntu-latest
     permissions:
+      # required by scorecard-action for publishing results
       security-events: write
+      # needed to publish results and get a badge
       id-token: write
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
-
-      - name: Run Scorecard
-        uses: ossf/scorecard-action@4eaacf0543bb3f2c246792bd56e8cdeffafb205a # v2.4.3
-        with:
-          results_file: results.sarif
-          results_format: sarif
-          publish_results: true
-
-      - name: Upload results
-        uses: github/codeql-action/upload-sarif@9e0d7b8d25671d64c341c19c0152d693099fb5ba # v4.35.5
-        with:
-          sarif_file: results.sarif
+      contents: read
+      # needed for nested API calls (Branch-Protection, Webhooks checks)
+      actions: read
+    uses: netresearch/.github/.github/workflows/scorecard.yml@main

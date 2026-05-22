@@ -52,19 +52,16 @@ jobs:
           sarif_file: 'trivy-results.sarif'
           category: 'trivy-${{ matrix.name }}'
 
+  # Secret-scanning now delegates to netresearch/.github's reusable, which
+  # runs betterleaks (gitleaks fork, OSS, no license required) against the
+  # full git history, uploads SARIF to GitHub code-scanning, and bakes in
+  # the dependabot[bot]+merge_group skip semantics. The trivy job above
+  # stays inline because it builds locally via bake before scanning — the
+  # security-container.yml reusable is designed for already-published
+  # images (matrix over tags) and can't be wired in until the build job
+  # itself migrates off bake.
   gitleaks:
-    runs-on: ubuntu-latest
-    # Skip for dependabot PRs - org secrets not available to external PRs
-    if: github.actor != 'dependabot[bot]'
+    uses: netresearch/.github/.github/workflows/gitleaks.yml@main
     permissions:
       contents: read
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
-
-      - name: Run Gitleaks
-        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+      security-events: write

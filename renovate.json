@@ -54,15 +54,14 @@
       "pinDigests": true
     },
     {
-      "description": "First-party Netresearch reusable workflows: never digest-pin. Org policy is @main (or @vN once tagged releases exist). Distinct from third-party actions which DO get SHA-pinned per supply-chain convention. Without this rule, Renovate's earlier digest-pinning produced commit 309fca0 (auto-merge.yml@<sha>) which violates that policy.",
+      "description": "First-party Netresearch reusable workflows: never digest-pin. Org policy is @main (or @vN once tagged releases exist). Distinct from third-party actions, which DO get SHA-pinned per supply-chain convention — different trust models.",
       "matchManagers": [
         "github-actions"
       ],
       "matchPackagePatterns": [
         "^netresearch/"
       ],
-      "pinDigests": false,
-      "enabled": false
+      "pinDigests": false
     },
     {
       "description": "Security updates - high priority",

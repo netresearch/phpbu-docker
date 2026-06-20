@@ -240,12 +240,22 @@ services:
 |--------|-------------|---------|
 | Amazon S3 / S3-compatible | `aws/aws-sdk-php` | **full** |
 | Google Cloud Storage | `google/cloud-storage` | **full** |
-| Azure Blob Storage | `microsoft/azure-storage-blob` | **full** |
+| Azure Blob Storage | `microsoft/azure-storage-blob` ⚠️ | **full** |
 | SFTP | `phpseclib/phpseclib` | **full** |
 | FTP | `sebastianfeldmann/ftp` | **full** |
 | Dropbox | `kunalvarma05/dropbox-php-sdk` | **full** |
 | Rsync | system binary | **full** |
 | Local/NFS | - | minimal, full |
+
+> ⚠️ **`microsoft/azure-storage-blob` is abandoned upstream.** Microsoft retired the
+> `microsoft/azure-storage-*` libraries with no Composer replacement. We keep the package
+> intentionally because phpbu's Azure Blob sync adapter
+> ([`Backup\Sync\AzureBlob`](https://github.com/sebastianfeldmann/phpbu/blob/master/src/Backup/Sync/AzureBlob.php))
+> is hardwired to its `MicrosoftAzure\Storage\Blob\BlobRestProxy` client — dropping it would
+> remove Azure sync from the full image. The package still works and its only moving security
+> surface (Guzzle) is patched via Dependabot. A migration to the maintained `azure-oss/storage`
+> SDK has to happen in phpbu upstream first; tracked there. If you don't sync to Azure, use the
+> `minimal` image, which doesn't carry this dependency.
 
 ### Additional Tools (full variant only)
 

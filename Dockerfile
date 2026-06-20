@@ -83,7 +83,10 @@ COPY --from=composer:2@sha256:1c62c57bb5228569034b7b4d1415b17ba6b731619f7de226ea
 COPY --chown=phpbu:phpbu app/full/composer.json ./composer.json
 COPY --chown=phpbu:phpbu app/full/composer.lock ./composer.lock
 
-# Install dependencies with optimization
+# Install dependencies with optimization.
+# NOTE: composer warns that microsoft/azure-storage-blob is abandoned. This is
+# intentional and accepted — phpbu's Azure Blob sync adapter is hardwired to that
+# SDK and Microsoft shipped no replacement. See README "Supported Sync Targets".
 RUN composer install \
     --no-ansi \
     --no-dev \

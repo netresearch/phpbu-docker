@@ -1,8 +1,8 @@
-# syntax=docker/dockerfile:1.24
+# syntax=docker/dockerfile:1.25
 #########################################
 # Base stage - minimal runtime dependencies
 # Pin to digest for supply chain security (renovate will update)
-FROM php:8.5-alpine@sha256:f6975f0b54f3138826ec673961f44375d54f448d3bbfc8a2a8c58228aeeaaba1 AS base
+FROM php:8.5-alpine@sha256:bc49fd4f6ea0f46fd45756349747400f668586ee1c4a69c63a436a6b51761350 AS base
 
 # Security: Create non-root user early
 RUN addgroup -g 1000 phpbu && \
@@ -49,7 +49,7 @@ ENV COMPOSER_ALLOW_SUPERUSER=1 \
     COMPOSER_HOME=/tmp/composer
 
 # Install Composer from official image (pinned for reproducibility)
-COPY --from=composer:2@sha256:1c62c57bb5228569034b7b4d1415b17ba6b731619f7de226eaa33ad1845785ec /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2@sha256:7725eb4545c438629ae8bde3ef0bb9a5038ef566126ad878442a69007242d267 /usr/bin/composer /usr/bin/composer
 
 # Copy dependency files first (layer caching)
 COPY --chown=phpbu:phpbu app/composer.json app/composer.lock ./
@@ -77,7 +77,7 @@ ENV COMPOSER_ALLOW_SUPERUSER=1 \
 # Note: PHP FTP extension already installed in base-full stage
 
 # Install Composer from official image (pinned for reproducibility)
-COPY --from=composer:2@sha256:1c62c57bb5228569034b7b4d1415b17ba6b731619f7de226eaa33ad1845785ec /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2@sha256:7725eb4545c438629ae8bde3ef0bb9a5038ef566126ad878442a69007242d267 /usr/bin/composer /usr/bin/composer
 
 # Copy full variant dependency files
 COPY --chown=phpbu:phpbu app/full/composer.json ./composer.json

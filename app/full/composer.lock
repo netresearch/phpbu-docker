@@ -1994,16 +1994,16 @@
         },
         {
             "name": "phpbu/phpbu",
-            "version": "6.0.32",
+            "version": "6.0.33",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianfeldmann/phpbu.git",
-                "reference": "f51694c08142b81e2b015c579d758ab9021514f1"
+                "reference": "98da12a2ddb212cfedc3415322f77a34c663ed47"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianfeldmann/phpbu/zipball/f51694c08142b81e2b015c579d758ab9021514f1",
-                "reference": "f51694c08142b81e2b015c579d758ab9021514f1",
+                "url": "https://api.github.com/repos/sebastianfeldmann/phpbu/zipball/98da12a2ddb212cfedc3415322f77a34c663ed47",
+                "reference": "98da12a2ddb212cfedc3415322f77a34c663ed47",
                 "shasum": ""
             },
             "require": {
@@ -2086,7 +2086,7 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianfeldmann/phpbu/issues",
-                "source": "https://github.com/sebastianfeldmann/phpbu/tree/6.0.32"
+                "source": "https://github.com/sebastianfeldmann/phpbu/tree/6.0.33"
             },
             "funding": [
                 {
@@ -2094,7 +2094,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-06-20T16:37:35+00:00"
+            "time": "2026-06-20T17:51:00+00:00"
         },
         {
             "name": "phpmailer/phpmailer",

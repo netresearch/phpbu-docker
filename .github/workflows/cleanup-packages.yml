@@ -17,13 +17,24 @@ jobs:
     permissions:
       packages: write
     steps:
-      - name: Delete old untagged versions
-        uses: actions/delete-package-versions@e5bc658cc4c965c472efe991f8beea3981499c55 # v5
+      # actions/delete-package-versions is NOT manifest-list aware: for a
+      # multi-arch image, GHCR stores the per-arch child manifests (and the
+      # cosign signature / SLSA provenance referrers) as separate UNTAGGED
+      # versions. `delete-only-untagged-versions: true` happily deletes those
+      # children once enough newer untagged versions exist, leaving every
+      # tagged index pointing at missing children -> `manifest unknown` on pull.
+      # That is exactly what bricked this package's images.
+      # dataaxiom/ghcr-cleanup-action understands manifest lists: it keeps the
+      # children + referrers of every TAGGED image and only removes orphans,
+      # partial pushes, and ghost tags (whose children were already GC'd).
+      - name: Delete orphaned / partial versions (manifest-aware)
+        uses: dataaxiom/ghcr-cleanup-action@d52806a0dc70b430571a37da1fde39733ffd640f # v1.2.2
         with:
-          package-name: ${{ env.PACKAGE_NAME }}
-          package-type: container
-          min-versions-to-keep: 10
-          delete-only-untagged-versions: true
+          packages: ${{ env.PACKAGE_NAME }}
+          delete-untagged: true          # orphaned untagged manifests
+          delete-partial-images: true    # incomplete multi-arch pushes
+          delete-ghost-images: true      # tags whose children were GC'd
+          keep-n-untagged: 10            # rollback margin
 
       - name: Summary
         run: |
@@ -31,4 +42,4 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- Package: ${{ env.PACKAGE_NAME }}" >> $GITHUB_STEP_SUMMARY
           echo "- Kept minimum: 10 versions" >> $GITHUB_STEP_SUMMARY
-          echo "- Deleted only untagged: true" >> $GITHUB_STEP_SUMMARY
+          echo "- Manifest-aware prune (children + sig/attestation referrers of tagged images kept)" >> $GITHUB_STEP_SUMMARY

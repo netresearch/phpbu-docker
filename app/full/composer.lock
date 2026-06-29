@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ec8eaac12a8e88131cff35119dcad130",
+    "content-hash": "c83d0fd6752d9e1c8e26a25dbc36f1a8",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -207,31 +207,70 @@
         },
         {
             "name": "azure-oss/storage",
-            "version": "1.9.0",
+            "version": "2.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Azure-OSS/azure-storage-php.git",
-                "reference": "ed2d4ad652cc90fa8067d9e47468666ed942cf76"
+                "reference": "cc47ef1d60f3dafe6ccf348f01624b00740004f9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Azure-OSS/azure-storage-php/zipball/ed2d4ad652cc90fa8067d9e47468666ed942cf76",
-                "reference": "ed2d4ad652cc90fa8067d9e47468666ed942cf76",
+                "url": "https://api.github.com/repos/Azure-OSS/azure-storage-php/zipball/cc47ef1d60f3dafe6ccf348f01624b00740004f9",
+                "reference": "cc47ef1d60f3dafe6ccf348f01624b00740004f9",
                 "shasum": ""
             },
             "require": {
-                "azure-oss/storage-common": "^1.0",
+                "azure-oss/storage-blob": "^2.0",
+                "azure-oss/storage-queue": "^1.0",
+                "php": "^8.2"
+            },
+            "type": "metapackage",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Brecht Vermeersch",
+                    "email": "brechtvermeersch@outlook.be"
+                }
+            ],
+            "description": "Azure Blob Storage PHP SDK",
+            "keywords": [
+                "azure",
+                "php",
+                "sdk",
+                "storage"
+            ],
+            "support": {
+                "source": "https://github.com/Azure-OSS/azure-storage-php/tree/2.0.0"
+            },
+            "time": "2026-06-25T23:00:41+00:00"
+        },
+        {
+            "name": "azure-oss/storage-blob",
+            "version": "2.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Azure-OSS/azure-storage-blob-php.git",
+                "reference": "151f20273b0393af2239de113d6db389b3772292"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Azure-OSS/azure-storage-blob-php/zipball/151f20273b0393af2239de113d6db389b3772292",
+                "reference": "151f20273b0393af2239de113d6db389b3772292",
+                "shasum": ""
+            },
+            "require": {
+                "azure-oss/storage-common": "^2.0",
                 "ext-curl": "*",
                 "ext-json": "*",
                 "ext-simplexml": "*",
                 "guzzlehttp/guzzle": "^7.8",
-                "php": "^8.1"
+                "php": "^8.2"
             },
             "type": "library",
             "autoload": {
-                "files": [
-                    "aliases.php"
-                ],
                 "psr-4": {
                     "AzureOss\\Storage\\Blob\\": ""
                 }
@@ -258,35 +297,32 @@
                 "storage"
             ],
             "support": {
-                "source": "https://github.com/Azure-OSS/azure-storage-php/tree/1.9.0"
+                "source": "https://github.com/Azure-OSS/azure-storage-blob-php/tree/2.2.0"
             },
-            "time": "2026-03-15T06:57:10+00:00"
+            "time": "2026-06-28T13:33:44+00:00"
         },
         {
             "name": "azure-oss/storage-common",
-            "version": "1.1.0",
+            "version": "2.1.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/Azure-OSS/azure-storage-php-common.git",
-                "reference": "3169c2f19475a087963e71aeb2cbf183eb676025"
+                "url": "https://github.com/Azure-OSS/azure-storage-common-php.git",
+                "reference": "bce008a8e8c11dfec15731bb5b0e5fa9f722fe58"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Azure-OSS/azure-storage-php-common/zipball/3169c2f19475a087963e71aeb2cbf183eb676025",
-                "reference": "3169c2f19475a087963e71aeb2cbf183eb676025",
+                "url": "https://api.github.com/repos/Azure-OSS/azure-storage-common-php/zipball/bce008a8e8c11dfec15731bb5b0e5fa9f722fe58",
+                "reference": "bce008a8e8c11dfec15731bb5b0e5fa9f722fe58",
                 "shasum": ""
             },
             "require": {
                 "azure-oss/identity": "^1.0",
                 "caseyamcl/guzzle_retry_middleware": "^2.10",
                 "guzzlehttp/guzzle": "^7.8",
-                "php": "^8.1"
+                "php": "^8.2"
             },
             "type": "library",
             "autoload": {
-                "files": [
-                    "aliases.php"
-                ],
                 "psr-4": {
                     "AzureOss\\Storage\\Common\\": ""
                 }
@@ -301,10 +337,62 @@
                     "email": "brechtvermeersch@outlook.be"
                 }
             ],
+            "description": "Shared primitives for Azure Storage PHP SDK packages",
             "support": {
-                "source": "https://github.com/Azure-OSS/azure-storage-php-common/tree/1.1.0"
+                "source": "https://github.com/Azure-OSS/azure-storage-common-php/tree/2.1.0"
             },
-            "time": "2026-03-13T19:18:28+00:00"
+            "time": "2026-06-27T17:54:46+00:00"
+        },
+        {
+            "name": "azure-oss/storage-queue",
+            "version": "1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Azure-OSS/azure-storage-queue-php.git",
+                "reference": "8674982b94fb14cd5eba3a79f1d0c60b640964e8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Azure-OSS/azure-storage-queue-php/zipball/8674982b94fb14cd5eba3a79f1d0c60b640964e8",
+                "reference": "8674982b94fb14cd5eba3a79f1d0c60b640964e8",
+                "shasum": ""
+            },
+            "require": {
+                "azure-oss/storage-common": "^2.0",
+                "ext-curl": "*",
+                "ext-json": "*",
+                "ext-simplexml": "*",
+                "guzzlehttp/guzzle": "^7.8",
+                "php": "^8.2"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "AzureOss\\Storage\\Queue\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Brecht Vermeersch",
+                    "email": "brechtvermeersch@outlook.be"
+                }
+            ],
+            "description": "Azure Storage Queue PHP SDK",
+            "keywords": [
+                "azure",
+                "php",
+                "queue",
+                "sdk",
+                "storage"
+            ],
+            "support": {
+                "source": "https://github.com/Azure-OSS/azure-storage-queue-php/tree/1.1.0"
+            },
+            "time": "2026-06-27T17:54:46+00:00"
         },
         {
             "name": "brick/math",

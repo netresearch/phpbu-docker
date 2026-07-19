@@ -1,3 +1,19 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Netresearch DTT GmbH
+#
+# GHCR package retention — caller for the org-wide reusable in
+# netresearch/.github. The reusable is manifest-list aware: it walks every
+# tagged manifest with crane, collects the referenced digests (per-arch
+# child manifests, cosign signatures, SLSA provenance, SBOM), and preserves
+# them — deleting only orphaned untagged versions that no tagged manifest
+# references. That is exactly the safety property the previous inline
+# dataaxiom/ghcr-cleanup-action provided; actions/delete-package-versions'
+# delete-only-untagged mode (which bricked this package's multi-arch images)
+# is NOT used.
+#
+# This repo's tags (latest, minimal, full, and bare semver like 8.2.0 /
+# 8.2.0-full) do not match the edge-tag-patterns default (edge*), so the
+# edge-cleanup pass deletes nothing; only the manifest-aware orphan pass runs.
 name: Cleanup Old Packages
 
 on:
@@ -8,37 +24,10 @@ on:
 
 permissions: {}
 
-env:
-  PACKAGE_NAME: phpbu-docker
-
 jobs:
   cleanup:
-    runs-on: ubuntu-latest
+    uses: netresearch/.github/.github/workflows/ghcr-retention.yml@main
+    with:
+      package-name: phpbu-docker
     permissions:
       packages: write
-    steps:
-      # actions/delete-package-versions is NOT manifest-list aware: for a
-      # multi-arch image, GHCR stores the per-arch child manifests (and the
-      # cosign signature / SLSA provenance referrers) as separate UNTAGGED
-      # versions. `delete-only-untagged-versions: true` happily deletes those
-      # children once enough newer untagged versions exist, leaving every
-      # tagged index pointing at missing children -> `manifest unknown` on pull.
-      # That is exactly what bricked this package's images.
-      # dataaxiom/ghcr-cleanup-action understands manifest lists: it keeps the
-      # children + referrers of every TAGGED image and only removes orphans,
-      # partial pushes, and ghost tags (whose children were already GC'd).
-      - name: Delete orphaned / partial versions (manifest-aware)
-        uses: dataaxiom/ghcr-cleanup-action@d52806a0dc70b430571a37da1fde39733ffd640f # v1.2.2
-        with:
-          packages: ${{ env.PACKAGE_NAME }}
-          delete-partial-images: true    # incomplete multi-arch pushes
-          delete-ghost-images: true      # tags whose children were GC'd
-          keep-n-untagged: 10            # rollback margin
-
-      - name: Summary
-        run: |
-          echo "## Package Cleanup Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- Package: ${{ env.PACKAGE_NAME }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Kept minimum: 10 versions" >> $GITHUB_STEP_SUMMARY
-          echo "- Manifest-aware prune (children + sig/attestation referrers of tagged images kept)" >> $GITHUB_STEP_SUMMARY

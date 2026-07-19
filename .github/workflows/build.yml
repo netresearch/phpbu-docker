@@ -11,175 +11,49 @@ on:
 
 permissions: {}
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-
 jobs:
+  # The former inline bake build/scan/sign job now delegates to
+  # netresearch/.github's reusable build-container-bake.yml. It builds every
+  # docker-bake.hcl target (minimal + full) in one pass, scans the produced
+  # images with Trivy (report-only, matching build-container.yml), and — on
+  # push/schedule/dispatch — pushes and cosign-signs the tag fan-out the HCL
+  # computes. The composer.lock version extraction feeds the HCL `variable`
+  # blocks via pre-build-command -> $GITHUB_ENV (PHPBU_VERSION, PHPBU_MINOR,
+  # PHPBU_MAJOR, BUILD_DATE, GIT_SHA).
+  #
+  # PR runs load a single-platform (amd64) build so Trivy can scan the local
+  # image, and disable the in-image attestations the HCL declares
+  # (provenance + SBOM) — the docker exporter used by --load cannot export
+  # attestations, and the previous inline job likewise produced attestations
+  # on push only (its load path built the attest-free ci/ci-full targets).
+  #
+  # Functional smoke tests (docker run --version/--help, non-root, TZ
+  # sanitisation, read-only fs, simulate mode, full-variant extras) and the
+  # container-structure test live in test.yml; Dockerfile lint and the
+  # bake-graph validation live in lint.yml.
   build:
-    # Dockerfile lint (hadolint) and bake-graph validation moved to
-    # .github/workflows/lint.yml — the hadolint piece now delegates to
-    # netresearch/.github's reusable lint-container.yml. The bake-graph
-    # check stays inline there because the reusable model is single-target
-    # docker/build-push-action, not bake. This `build` job likewise stays
-    # inline: the bake multi-target shape (minimal + full variants from
-    # docker-bake.hcl with shared cache and combined tag fan-out) doesn't
-    # map onto build-container.yml's single-target shape, and a
-    # bake-to-matrix refactor would either duplicate the tag fan-out into
-    # `metadata-tags` for two parallel reusable calls or abandon
-    # docker-bake.hcl entirely. Both invasive; flagged as upstream follow-up.
-    runs-on: ubuntu-latest
+    uses: netresearch/.github/.github/workflows/build-container-bake.yml@main
     permissions:
       contents: read
       packages: write
-      id-token: write
       security-events: write
-      attestations: write
-
-    steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-
-      - name: Extract phpbu version from composer.lock
-        id: version
-        run: |
-          PHPBU_VERSION=$(jq -r '.packages[] | select(.name == "phpbu/phpbu") | .version' app/composer.lock)
-          PHPBU_MINOR=$(echo "$PHPBU_VERSION" | cut -d. -f1,2)
-          PHPBU_MAJOR=$(echo "$PHPBU_VERSION" | cut -d. -f1)
-          BUILD_DATE=$(date -u +%Y-%m-%d)
-          GIT_SHA=$(git rev-parse --short HEAD)
-          echo "phpbu_version=$PHPBU_VERSION" >> $GITHUB_OUTPUT
-          echo "phpbu_minor=$PHPBU_MINOR" >> $GITHUB_OUTPUT
-          echo "phpbu_major=$PHPBU_MAJOR" >> $GITHUB_OUTPUT
-          echo "build_date=$BUILD_DATE" >> $GITHUB_OUTPUT
-          echo "git_sha=$GIT_SHA" >> $GITHUB_OUTPUT
-          echo "## Version Info" >> $GITHUB_STEP_SUMMARY
-          echo "- phpbu: $PHPBU_VERSION" >> $GITHUB_STEP_SUMMARY
-          echo "- Build date: $BUILD_DATE" >> $GITHUB_STEP_SUMMARY
-          echo "- Git SHA: $GIT_SHA" >> $GITHUB_STEP_SUMMARY
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
-
-      - name: Log in to GHCR
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build CI images (minimal + full)
-        uses: docker/bake-action@d3418bd7d0e9324001bca92fa8ba175ea7e6dc9b # v7.3.0
-        with:
-          targets: ci,ci-full
-          load: true
-
-      - name: Test minimal image
-        run: |
-          echo "## Testing minimal variant" >> $GITHUB_STEP_SUMMARY
-          docker run --rm phpbu:ci --version
-          docker run --rm phpbu:ci --help
-
-      - name: Test full image
-        run: |
-          echo "## Testing full variant" >> $GITHUB_STEP_SUMMARY
-          docker run --rm phpbu:ci-full --version
-          docker run --rm phpbu:ci-full --help
-          # Verify additional tools are present
-          docker run --rm --entrypoint which phpbu:ci-full rsync
-          docker run --rm --entrypoint which phpbu:ci-full gpg
-
-      - name: Run Trivy on minimal
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # 0.36.0
-        with:
-          image-ref: phpbu:ci
-          format: 'sarif'
-          output: 'trivy-minimal.sarif'
-          severity: 'CRITICAL,HIGH'
-          exit-code: '1'
-
-      - name: Run Trivy on full
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # 0.36.0
-        with:
-          image-ref: phpbu:ci-full
-          format: 'sarif'
-          output: 'trivy-full.sarif'
-          severity: 'CRITICAL,HIGH'
-          exit-code: '1'
-
-      - name: Upload Trivy scan results
-        uses: github/codeql-action/upload-sarif@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4.37.0
-        if: always()
-        with:
-          sarif_file: 'trivy-minimal.sarif'
-          category: 'trivy-minimal'
-
-      - name: Upload Trivy scan results (full)
-        uses: github/codeql-action/upload-sarif@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4.37.0
-        if: always()
-        with:
-          sarif_file: 'trivy-full.sarif'
-          category: 'trivy-full'
-
-      - name: Build and push all variants
-        if: github.event_name != 'pull_request'
-        id: bake
-        uses: docker/bake-action@d3418bd7d0e9324001bca92fa8ba175ea7e6dc9b # v7.3.0
-        with:
-          targets: minimal,full
-          push: true
-          sbom: true
-          provenance: mode=max
-        env:
-          PHPBU_VERSION: ${{ steps.version.outputs.phpbu_version }}
-          PHPBU_MINOR: ${{ steps.version.outputs.phpbu_minor }}
-          PHPBU_MAJOR: ${{ steps.version.outputs.phpbu_major }}
-          BUILD_DATE: ${{ steps.version.outputs.build_date }}
-          GIT_SHA: ${{ steps.version.outputs.git_sha }}
-
-      - name: Install Cosign
-        if: github.event_name != 'pull_request'
-        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
-
-      - name: Sign images
-        if: github.event_name != 'pull_request'
-        env:
-          PHPBU_VERSION: ${{ steps.version.outputs.phpbu_version }}
-          PHPBU_MINOR: ${{ steps.version.outputs.phpbu_minor }}
-          PHPBU_MAJOR: ${{ steps.version.outputs.phpbu_major }}
-          BUILD_DATE: ${{ steps.version.outputs.build_date }}
-          GIT_SHA: ${{ steps.version.outputs.git_sha }}
-        run: |
-          # Sign minimal variant tags
-          for tag in $(docker buildx bake minimal --print 2>/dev/null | jq -r '.target.minimal.tags[]'); do
-            cosign sign --yes "$tag"
-          done
-          # Sign full variant tags
-          for tag in $(docker buildx bake full --print 2>/dev/null | jq -r '.target.full.tags[]'); do
-            cosign sign --yes "$tag"
-          done
-
-      - name: Build summary
-        if: github.event_name != 'pull_request'
-        env:
-          PHPBU_VERSION: ${{ steps.version.outputs.phpbu_version }}
-          BUILD_DATE: ${{ steps.version.outputs.build_date }}
-          GIT_SHA: ${{ steps.version.outputs.git_sha }}
-        run: |
-          echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Minimal Variant" >> $GITHUB_STEP_SUMMARY
-          echo "**Image**: \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Tags**: \`$PHPBU_VERSION\`, \`minimal\`, \`latest\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Full Variant" >> $GITHUB_STEP_SUMMARY
-          echo "**Image**: \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:full\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Tags**: \`$PHPBU_VERSION-full\`, \`full\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Platforms**: linux/amd64, linux/arm64" >> $GITHUB_STEP_SUMMARY
-          echo "**Signed**: Yes (Cosign keyless)" >> $GITHUB_STEP_SUMMARY
-          echo "**SBOM**: Yes (SPDX)" >> $GITHUB_STEP_SUMMARY
-          echo "**Provenance**: Yes (SLSA)" >> $GITHUB_STEP_SUMMARY
+      id-token: write
+    with:
+      targets: minimal,full
+      push: ${{ github.event_name != 'pull_request' }}
+      load: ${{ github.event_name == 'pull_request' }}
+      platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || '' }}
+      scan: true
+      sign: ${{ github.event_name != 'pull_request' }}
+      attest: true
+      sbom: ${{ github.event_name != 'pull_request' }}
+      provenance: ${{ github.event_name == 'pull_request' && 'false' || '' }}
+      pre-build-command: |
+        V=$(jq -r '.packages[] | select(.name == "phpbu/phpbu") | .version' app/composer.lock)
+        {
+          echo "PHPBU_VERSION=$V"
+          echo "PHPBU_MINOR=$(echo "$V" | cut -d. -f1,2)"
+          echo "PHPBU_MAJOR=$(echo "$V" | cut -d. -f1)"
+          echo "BUILD_DATE=$(date -u +%Y-%m-%d)"
+          echo "GIT_SHA=$(git rev-parse --short HEAD)"
+        } >> "$GITHUB_ENV"

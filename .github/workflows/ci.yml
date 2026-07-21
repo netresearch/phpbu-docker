@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Netresearch DTT GmbH
+#
+# CI gate — caller for the org-wide "Docker Image CI" gold-standard reusable
+# (netresearch/.github/.github/workflows/docker-image-ci.yml@main).
+#
+# This one call site composes: Dockerfile lint (hadolint), YAML / Markdown /
+# compose lint, a validation-only single-arch image build with Trivy scanning,
+# secret scanning (gitleaks/betterleaks) and PR dependency review. It replaces
+# the former standalone lint.yml (hadolint + bake --print) and security.yml
+# (betterleaks + a dual-variant Trivy pass), both of which are now subsumed:
+#   - hadolint          -> meta Lint Container
+#   - bake --print      -> build.yml actually builds the bake targets (--load)
+#   - betterleaks       -> meta Secret Scanning
+#   - dual-variant Trivy -> build.yml (build-container-bake) already scans both
+#                          targets and uploads dual SARIF to code-scanning
+#
+# NOT subsumed and kept separate:
+#   - test.yml     — phpbu functional smoke tests + container-structure-test
+#   - build.yml    — the bake multi-variant build that PUSHES + signs on main
+#   - release.yml  — the tag-triggered publish
+# The meta is CI-only (push: false); it never pushes, signs or attests.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions: {}
+
+jobs:
+  docker-ci:
+    uses: netresearch/.github/.github/workflows/docker-image-ci.yml@main
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+      id-token: write
+      attestations: write
+      actions: read
+      pull-requests: write
+    secrets:
+      GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+    with:
+      image-name: phpbu-docker
+      dockerfile: ./Dockerfile
+      lint-container: true
+      lint-yaml: true
+      lint-markdown: true
+      lint-compose: true
+      compose-files: compose.yml
+      enable-gitleaks: true
+      enable-codeql: false
+      enable-smoke-test: false

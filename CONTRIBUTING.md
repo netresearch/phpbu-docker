@@ -94,6 +94,7 @@ flowchart LR
 
 - [ ] Dockerfile passes hadolint
 - [ ] `docker buildx bake --print` validates bake file
+- [ ] Every `composer.json` still agrees with its `composer.lock`
 - [ ] Image builds successfully
 - [ ] `--version` and `--help` work
 - [ ] No new critical/high vulnerabilities (Trivy)
@@ -121,6 +122,32 @@ docker run --rm phpbu:ci --help
 docker run --rm phpbu:ci-full --version
 docker run --rm phpbu:ci-full which rsync gpg ssh
 ```
+
+### Composer Manifests
+
+Both `app/` and `app/full/` are installed from their lock files during the image
+build, so a constraint changed without regenerating the lock breaks the build
+about ninety seconds in, as a bare `exit code: 4`. The same question takes a
+second up front:
+
+```bash
+# Per manifest — repeat in app/ and app/full/
+composer validate --check-lock --no-check-publish --strict
+```
+
+Two things can be wrong, and they need different fixes:
+
+- **A named package** — `Required package "x/y" is in the lock file as "1.2.3"
+  but that does not satisfy your constraint "^2.0"`. Re-resolve it:
+  `composer update x/y`.
+- **Only the content hash** — `The lock file is not up to date with the latest
+  changes in composer.json`, with no package named. The lock still satisfies
+  every constraint; refresh the hash with `composer update --lock`.
+
+`composer update --lock` does *not* fix the first case: it rewrites the hash and
+leaves the version mismatch behind, so `validate` still fails.
+
+CI runs this over every tracked `composer.json` in `composer-validate.yml`.
 
 ### Security Scanning
 

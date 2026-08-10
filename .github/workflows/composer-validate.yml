@@ -1,0 +1,77 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Netresearch DTT GmbH
+#
+# Manifest/lock consistency gate.
+#
+# A composer.json raised without regenerating its composer.lock used to surface
+# only once a multi-arch image build reached `composer install`, roughly ninety
+# seconds in, as a bare `exit code: 4` whose actual message sat four lines
+# earlier in the log. It has happened: Renovate bumped a guzzle constraint and
+# left the lock behind, and four CI runs were spent on it.
+#
+# `composer validate --check-lock` answers the same question in about a second
+# and prints the package and the two versions by name, e.g.
+#   Required package "guzzlehttp/guzzle" is in the lock file as "7.15.2" but
+#   that does not satisfy your constraint "^8.0".
+# Where a constraint merely moved without becoming unsatisfiable, only the
+# recorded content hash diverges and composer reports that instead — no package
+# can be named there, because none is in conflict.
+#
+# This is a diagnosis-speed gate, not a replacement for build.yml or test.yml:
+# it proves the manifests and locks agree, never that the image builds.
+
+name: Composer Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  validate:
+    name: manifests vs. lock files
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Report toolchain
+        # No setup-php step: the check compares the lock's content hash and its
+        # recorded versions against the manifest's constraints, which is
+        # independent of the platform PHP. Verified on PHP 8.3 and 8.5 with
+        # composer 2.7 and 2.9 against these manifests, which require php>=8.5.
+        # Printed so a change in the runner image is visible in the log.
+        run: |
+          php --version | head -1
+          composer --version
+
+      - name: Validate every manifest against its lock
+        # git ls-files rather than find, so the set is exactly the tracked
+        # manifests — vendor/ and any untracked leftovers on the runner cannot
+        # widen it. Today that is app/ and app/full/; a third variant is picked
+        # up without editing this workflow.
+        run: |
+          set -uo pipefail
+          mapfile -t manifests < <(git ls-files '*composer.json')
+          if [ "${#manifests[@]}" -eq 0 ]; then
+            echo "::error::No tracked composer.json found — this workflow is validating nothing."
+            exit 1
+          fi
+          status=0
+          for manifest in "${manifests[@]}"; do
+            dir=$(dirname "$manifest")
+            echo "::group::$manifest"
+            if [ ! -f "$dir/composer.lock" ]; then
+              echo "::error file=$manifest::No composer.lock beside this manifest. Every composer.json here is installed from a lock during the image build, so an unlocked one fails the build instead of this check."
+              status=1
+            elif ! (cd "$dir" && composer validate --check-lock --no-check-publish --strict --no-interaction); then
+              echo "::error file=$dir/composer.lock::Out of date with $manifest. Re-resolve in $dir/: 'composer update <package>' for a package named above, or 'composer update --lock' when only the content hash drifted. '--lock' alone refreshes the hash and leaves a named mismatch in place."
+              status=1
+            fi
+            echo "::endgroup::"
+          done
+          exit $status

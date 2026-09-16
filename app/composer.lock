@@ -246,16 +246,16 @@
         },
         {
             "name": "symfony/process",
-            "version": "v7.4.13",
+            "version": "v7.4.19",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/process.git",
-                "reference": "f5804be144caceb570f6747519999636b664f24c"
+                "reference": "ed0ae095b86994d370d5791612e55984f15aa30e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/process/zipball/f5804be144caceb570f6747519999636b664f24c",
-                "reference": "f5804be144caceb570f6747519999636b664f24c",
+                "url": "https://api.github.com/repos/symfony/process/zipball/ed0ae095b86994d370d5791612e55984f15aa30e",
+                "reference": "ed0ae095b86994d370d5791612e55984f15aa30e",
                 "shasum": ""
             },
             "require": {
@@ -287,7 +287,7 @@
             "description": "Executes commands in sub-processes",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/process/tree/v7.4.13"
+                "source": "https://github.com/symfony/process/tree/v7.4.19"
             },
             "funding": [
                 {
@@ -307,7 +307,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-05-23T16:05:06+00:00"
+            "time": "2026-09-02T12:38:34+00:00"
         }
     ],
     "packages-dev": [],

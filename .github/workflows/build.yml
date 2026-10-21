@@ -8,6 +8,7 @@ on:
   schedule:
     - cron: '0 6 * * 1'  # Weekly security rebuild
   workflow_dispatch:  # Allow manual trigger
+  merge_group:
 
 permissions: {}
 
@@ -21,8 +22,8 @@ jobs:
   # blocks via pre-build-command -> $GITHUB_ENV (PHPBU_VERSION, PHPBU_MINOR,
   # PHPBU_MAJOR, BUILD_DATE, GIT_SHA).
   #
-  # PR runs load a single-platform (amd64) build so Trivy can scan the local
-  # image, and disable the in-image attestations the HCL declares
+  # PR and merge-queue runs load a single-platform (amd64) build so Trivy
+  # can scan the local image, and disable the in-image attestations the HCL declares
   # (provenance + SBOM) — the docker exporter used by --load cannot export
   # attestations, and the previous inline job likewise produced attestations
   # on push only (its load path built the attest-free ci/ci-full targets).
@@ -40,14 +41,14 @@ jobs:
       id-token: write
     with:
       targets: minimal,full
-      push: ${{ github.event_name != 'pull_request' }}
-      load: ${{ github.event_name == 'pull_request' }}
-      platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || '' }}
+      push: ${{ github.event_name != 'pull_request' && github.event_name != 'merge_group' }}
+      load: ${{ (github.event_name == 'pull_request' || github.event_name == 'merge_group') }}
+      platforms: ${{ (github.event_name == 'pull_request' || github.event_name == 'merge_group') && 'linux/amd64' || '' }}
       scan: true
-      sign: ${{ github.event_name != 'pull_request' }}
+      sign: ${{ github.event_name != 'pull_request' && github.event_name != 'merge_group' }}
       attest: true
-      sbom: ${{ github.event_name != 'pull_request' }}
-      provenance: ${{ github.event_name == 'pull_request' && 'false' || '' }}
+      sbom: ${{ github.event_name != 'pull_request' && github.event_name != 'merge_group' }}
+      provenance: ${{ (github.event_name == 'pull_request' || github.event_name == 'merge_group') && 'false' || '' }}
       pre-build-command: |
         V=$(jq -r '.packages[] | select(.name == "phpbu/phpbu") | .version' app/composer.lock)
         {

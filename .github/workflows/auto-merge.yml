@@ -1,7 +1,8 @@
 # Auto-merge dependency updates using the org-level reusable workflow.
 # safe-updates-only: true restricts auto-merge to semver minor/patch
 # (and Docker non-major) — majors are approved but left for human review.
-# merge-strategy: rebase preserves this repo's required_linear_history.
+# merge-strategy: merge, because main requires signed commits and GitHub
+# cannot sign a rebase merge: every rebase attempt is refused.
 name: Auto-merge dependency PRs
 
 on:
@@ -14,7 +15,7 @@ jobs:
     uses: netresearch/.github/.github/workflows/auto-merge-deps.yml@main
     with:
       safe-updates-only: true
-      merge-strategy: rebase
+      merge-strategy: merge
     permissions:
       contents: write
       pull-requests: write

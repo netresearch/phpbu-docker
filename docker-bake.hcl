@@ -87,9 +87,9 @@ target "minimal" {
     "type=sbom"
   ]
 
-  # Build cache
-  cache-from = ["type=gha,scope=minimal"]
-  cache-to   = ["type=gha,scope=minimal,mode=max"]
+  # No cache-from/cache-to here: build.yml and release.yml get the GHA cache
+  # from the build-container-bake reusable, which leaves it out on the weekly
+  # rebuild so that `apk upgrade` runs. A cache declared here would still apply.
 }
 
 # Full variant - all sync adapters (~150MB)
@@ -130,9 +130,7 @@ target "full" {
     "type=sbom"
   ]
 
-  # Build cache
-  cache-from = ["type=gha,scope=full"]
-  cache-to   = ["type=gha,scope=full,mode=max"]
+  # No cache-from/cache-to here, for the reason given on "minimal".
 }
 
 # Development target (single platform, no push)

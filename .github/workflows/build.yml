@@ -49,6 +49,10 @@ jobs:
       attest: true
       sbom: ${{ github.event_name != 'pull_request' && github.event_name != 'merge_group' }}
       provenance: ${{ (github.event_name == 'pull_request' || github.event_name == 'merge_group') && 'false' || '' }}
+      # The weekly run exists to pick up OS patches through `apk upgrade`.
+      # With the layer cache on, that step is restored from the previous
+      # build and the rebuild publishes the same packages again.
+      cache: ${{ github.event_name != 'schedule' }}
       pre-build-command: |
         V=$(jq -r '.packages[] | select(.name == "phpbu/phpbu") | .version' app/composer.lock)
         {

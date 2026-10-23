@@ -2,7 +2,7 @@
 #########################################
 # Base stage - minimal runtime dependencies
 # Pin to digest for supply chain security (renovate will update)
-FROM php:8.5-alpine@sha256:8d7090ce03736b6ecfd739d87a46ab59b5d1d0d837f1ac7c5d2702f1d312f5a0 AS base
+FROM php:8.5-alpine@sha256:74f166beaa4f21bc1ac41980f3a56c82b3fe8d50931f8218c23c75dc01f03d15 AS base
 
 # Security: Create non-root user early
 RUN addgroup -g 1000 phpbu && \

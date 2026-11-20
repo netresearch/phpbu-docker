@@ -26,7 +26,7 @@ docker pull ghcr.io/netresearch/phpbu-docker:full
 
 ## Features
 
-- **PHP 8.5** on minimal Alpine base
+- **PHP 8.6** on minimal Alpine base
 - **Multi-architecture** support (amd64, arm64)
 - **Pre-configured** for MySQL, PostgreSQL, MongoDB, Redis backups
 - **Sync support** for S3, SFTP, Dropbox, Google Drive, Azure (full variant)

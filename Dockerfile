@@ -2,7 +2,7 @@
 #########################################
 # Base stage - minimal runtime dependencies
 # Pin to digest for supply chain security (renovate will update)
-FROM php:8.5-alpine@sha256:1ff5b45922ab30f418447c6089dbe2eba5f01e0b2742863d0327ac349305d70f AS base
+FROM php:8.6-alpine@sha256:7cadc021ea2464b01da1e546c51e3d5ffe924a07ce75d169c1608457ad56879f AS base
 
 # Security: Create non-root user early
 RUN addgroup -g 1000 phpbu && \
@@ -109,7 +109,7 @@ LABEL org.opencontainers.image.title="phpbu-docker" \
       org.opencontainers.image.source="https://github.com/netresearch/phpbu-docker" \
       org.opencontainers.image.documentation="https://github.com/netresearch/phpbu-docker#readme" \
       org.opencontainers.image.licenses="LGPL-3.0" \
-      org.opencontainers.image.base.name="docker.io/library/php:8.5-alpine" \
+      org.opencontainers.image.base.name="docker.io/library/php:8.6-alpine" \
       org.opencontainers.image.variant="minimal"
 
 # Copy built application from build stage
@@ -150,7 +150,7 @@ LABEL org.opencontainers.image.title="phpbu-docker" \
       org.opencontainers.image.source="https://github.com/netresearch/phpbu-docker" \
       org.opencontainers.image.documentation="https://github.com/netresearch/phpbu-docker#readme" \
       org.opencontainers.image.licenses="LGPL-3.0" \
-      org.opencontainers.image.base.name="docker.io/library/php:8.5-alpine" \
+      org.opencontainers.image.base.name="docker.io/library/php:8.6-alpine" \
       org.opencontainers.image.variant="full"
 
 # Copy built application from build stage

@@ -105,6 +105,9 @@ expect title true v1.0.0 "title=v1.0.0 — phpbu 6.0.33, PHP 8.6.0"
 new_repo pinned
 expect pinned true v1.0.0 "docker pull ghcr.io/netresearch/phpbu-docker@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
 
+new_repo pull-labels
+expect pull-labels true v1.0.0 "# full: all sync adapters"
+
 new_repo released-at-head
 g tag -a v1.0.0 -m v1.0.0
 RELEASED=v1.0.0 expect released-at-head false "*already carries the released tag v1.0.0*"

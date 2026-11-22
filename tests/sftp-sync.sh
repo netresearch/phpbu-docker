@@ -71,7 +71,7 @@ docker run --rm --network "$RUN_ID" \
   "$IMAGE" --configuration=/config/backup.json > "$WORK/phpbu.log" 2>&1 || status=$?
 cat "$WORK/phpbu.log"
 
-if [ "$status" -ne 0 ]; then
+if [[ "$status" -ne 0 ]]; then
   echo "::error::phpbu exited with status $status"
   exit 1
 fi

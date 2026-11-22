@@ -342,8 +342,9 @@ cosign verify ghcr.io/netresearch/phpbu-docker:latest \
   --certificate-identity-regexp "https://github.com/netresearch/phpbu-docker" \
   --certificate-oidc-issuer "https://token.actions.githubusercontent.com"
 
-# Download SBOM
-cosign download sbom ghcr.io/netresearch/phpbu-docker:latest > sbom.spdx.json
+# Download SBOM (in-image BuildKit attestation, one document per platform)
+docker buildx imagetools inspect ghcr.io/netresearch/phpbu-docker:latest \
+  --format '{{ json .SBOM }}' > sbom.json
 
 # Verify provenance
 cosign verify-attestation ghcr.io/netresearch/phpbu-docker:latest \

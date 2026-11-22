@@ -67,6 +67,7 @@ expect() {
   out="$WORK/$name.out"
   rm -f "$out"
   if ! PATH="$WORK/bin:$PATH" IMAGE_TAGS="$TAGS" PHP_VERSION=8.6.0 GITHUB_OUTPUT="$out" \
+    MINIMAL_DIGEST="sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" FULL_DIGEST="sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" \
     GITHUB_REPOSITORY=netresearch/phpbu-docker "$PLANNER" 2> "$WORK/$name.err"; then
     echo "FAIL $name: planner exited non-zero: $(tail -n1 "$WORK/$name.err")"
     fail=$((fail + 1))
@@ -100,6 +101,9 @@ expect first true v1.0.0 "First image release with its own version number"
 
 new_repo title
 expect title true v1.0.0 "title=v1.0.0 — phpbu 6.0.33, PHP 8.6.0"
+
+new_repo pinned
+expect pinned true v1.0.0 "docker pull ghcr.io/netresearch/phpbu-docker@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
 
 new_repo released-at-head
 g tag -a v1.0.0 -m v1.0.0
@@ -148,6 +152,11 @@ g tag -a v1.0.0 -m v1.0.0
 commit docker-bake.hcl -m "docs(bake): describe the cache"
 commit Dockerfile -m "ci: lint hint"
 expect docs-in-image-file false "only docs, ci, test or style commits*"
+
+new_repo docs-bang
+g tag -a v1.2.3 -m v1.2.3
+commit Dockerfile -m "docs!: clarify usage"
+expect docs-bang false "only docs, ci, test or style commits*"
 
 new_repo docs-plus-fix
 g tag -a v1.0.0 -m v1.0.0

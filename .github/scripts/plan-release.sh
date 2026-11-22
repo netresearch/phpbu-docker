@@ -51,13 +51,11 @@ skip() {
 head_sha="$(git rev-parse HEAD)"
 
 existing="$(git tag --points-at HEAD | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n1 || true)"
-if [[ -n "$existing" ]]; then
-  # A tag without a release is left behind when the publish job failed after
-  # the tag was created. Publish for that tag instead of skipping it, because
-  # the next push counts from it.
-  if gh release view "$existing" --repo "$REPO" > /dev/null 2>&1; then
-    skip "HEAD already carries the released tag $existing"
-  fi
+# A tag without a release is left behind when the publish job failed after
+# the tag was created. Publish for that tag instead of skipping it, because
+# the next push counts from it.
+if [[ -n "$existing" ]] && gh release view "$existing" --repo "$REPO" > /dev/null 2>&1; then
+  skip "HEAD already carries the released tag $existing"
 fi
 
 # numbered: the highest version tag below this commit; the next version
@@ -97,9 +95,23 @@ done <<< "${IMAGE_TAGS:-}"
 [[ -n "$ref_minimal" ]] || { echo "no <phpbu>-<sha> tag in IMAGE_TAGS" >&2; exit 1; }
 [[ -n "$ref_full" ]] || { echo "no <phpbu>-full-<sha> tag in IMAGE_TAGS" >&2; exit 1; }
 
+# The <phpbu>-<sha> tags are pushed again by the weekly rebuild of the same
+# commit, so the release names each image by the digest this build pushed.
+digest_of() {
+  local ref="$1"
+  docker buildx imagetools inspect "$ref" --format '{{.Manifest.Digest}}'
+}
+digest_minimal="${MINIMAL_DIGEST:-$(digest_of "$ref_minimal")}"
+digest_full="${FULL_DIGEST:-$(digest_of "$ref_full")}"
+for d in "$digest_minimal" "$digest_full"; do
+  [[ "$d" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "unexpected digest: $d" >&2; exit 1; }
+done
+pin_minimal="${ref_minimal%:*}@${digest_minimal}"
+pin_full="${ref_full%:*}@${digest_full}"
+
 php="${PHP_VERSION:-}"
 if [[ -z "$php" ]]; then
-  php="$(docker run --rm --entrypoint php "$ref_minimal" -r 'echo PHP_VERSION;')"
+  php="$(docker run --rm --entrypoint php "$pin_minimal" -r 'echo PHP_VERSION;')"
 fi
 [[ "$php" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]] || { echo "unexpected PHP version: $php" >&2; exit 1; }
 
@@ -119,7 +131,7 @@ else
   for c in "${commits[@]}"; do
     subject="$(git log -1 --format=%s "$c")"
     # A comment or CI tweak in an image file does not change the image.
-    if [[ "$subject" =~ ^(docs|ci|test|style)(\(|:) ]]; then
+    if [[ "$subject" =~ ^(docs|ci|test|style)(\([^\)]*\))?!?: ]]; then
       continue
     fi
     counted=$((counted + 1))
@@ -177,22 +189,22 @@ ${change_section}
 
 ## Pull this build
 
-The tags below name exactly this build. \`${phpbu}\`, \`latest\`, \`${phpbu}-full\` and \`full\` move to every later build.
+The references below name exactly this build by digest. The tag \`${ref_minimal##*:}\` is pushed again by the weekly rebuild, and \`${phpbu}\`, \`latest\`, \`${phpbu}-full\` and \`full\` move to every later build.
 
 \`\`\`bash
-docker pull ${ref_minimal}
-docker pull ${ref_full}
+docker pull ${pin_minimal}
+docker pull ${pin_full}
 \`\`\`
 
 ## Verify the signature
 
 \`\`\`bash
-cosign verify ${ref_minimal} \\
+cosign verify ${pin_minimal} \\
   --certificate-identity-regexp \"https://github.com/${REPO}\" \\
   --certificate-oidc-issuer \"https://token.actions.githubusercontent.com\"
 \`\`\`
 
-SBOM: \`cosign download sbom ${ref_minimal}\`"
+SBOM (in-image attestation): \`docker buildx imagetools inspect ${pin_minimal} --format '{{ json .SBOM }}'\`"
 
 emit release true
 emit create_tag "$create_tag"

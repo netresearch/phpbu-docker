@@ -192,7 +192,9 @@ ${change_section}
 The references below name exactly this build by digest. The tag \`${ref_minimal##*:}\` is pushed again by the weekly rebuild, and \`${phpbu}\`, \`latest\`, \`${phpbu}-full\` and \`full\` move to every later build.
 
 \`\`\`bash
+# minimal: database clients only
 docker pull ${pin_minimal}
+# full: all sync adapters
 docker pull ${pin_full}
 \`\`\`
 

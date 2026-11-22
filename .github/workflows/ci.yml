@@ -18,7 +18,7 @@
 # NOT subsumed and kept separate:
 #   - test.yml     — phpbu functional smoke tests + container-structure-test
 #   - build.yml    — the bake multi-variant build that PUSHES + signs on main
-#   - release.yml  — the tag-triggered publish
+#   - build.yml also publishes the image release after a push to main
 # The meta is CI-only (push: false); it never pushes, signs or attests.
 
 name: CI

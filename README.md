@@ -247,6 +247,11 @@ services:
 | Rsync | system binary | **full** |
 | Local/NFS | - | minimal, full |
 
+> **Warning**: phpbu's SFTP sync does not verify the server's host key. Anyone who
+> can intercept the connection can impersonate the server and receive the password
+> and the backup. Use SFTP only on a network you trust, or use the Rsync target,
+> which connects through `ssh` and checks the host key against `known_hosts`.
+
 ### Additional Tools (full variant only)
 
 | Tool | Purpose |

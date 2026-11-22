@@ -19,8 +19,8 @@ mkdir -p "$WORK/bin"
 # Stub gh: "release view <tag>" succeeds only for the tags in RELEASED.
 cat > "$WORK/bin/gh" <<'STUB'
 #!/usr/bin/env bash
-if [ "$1 $2" = "release view" ]; then
-  for t in ${RELEASED:-}; do [ "$t" = "$3" ] && exit 0; done
+if [[ "$1 $2" = "release view" ]]; then
+  for t in ${RELEASED:-}; do [[ "$t" = "$3" ]] && exit 0; done
   exit 1
 fi
 exit 0
@@ -39,7 +39,13 @@ fail=0
 
 lock() { printf '{"packages":[{"name":"phpbu/phpbu","version":"%s"}]}\n' "$1" > app/composer.lock; }
 g() { git -c user.email=test@example.org -c user.name=test -c commit.gpgsign=false -c tag.gpgsign=false "$@"; }
-commit() { echo "$RANDOM" >> "$1"; git add "$1"; g commit -q "${@:2}"; }
+commit() {
+  local path="$1"
+  shift
+  echo "$RANDOM" >> "$path"
+  git add "$path"
+  g commit -q "$@"
+}
 
 new_repo() {
   local dir="$WORK/$1"
@@ -66,19 +72,19 @@ expect() {
   fi
   local got_release got
   got_release="$(sed -n 's/^release=//p' "$out")"
-  if [ "$want_release" = true ]; then
+  if [[ "$want_release" = true ]]; then
     got="$(sed -n 's/^tag=//p' "$out")"
   else
     got="$(sed -n 's/^reason=//p' "$out")"
   fi
   # $want is a glob pattern on purpose.
   # shellcheck disable=SC2053
-  if [ "$got_release" != "$want_release" ] || [[ "$got" != $want ]]; then
+  if [[ "$got_release" != "$want_release" ]] || [[ "$got" != $want ]]; then
     echo "FAIL $name: release=$got_release, got '$got', want release=$want_release '$want'"
     fail=$((fail + 1))
     return
   fi
-  if [ -n "$body_pat" ] && ! grep -qF -- "$body_pat" "$out"; then
+  if [[ -n "$body_pat" ]] && ! grep -qF -- "$body_pat" "$out"; then
     echo "FAIL $name: output lacks '$body_pat'"
     fail=$((fail + 1))
     return
@@ -160,4 +166,4 @@ else
 fi
 
 echo "$pass passed, $fail failed"
-[ "$fail" -eq 0 ]
+[[ "$fail" -eq 0 ]]

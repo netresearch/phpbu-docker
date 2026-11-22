@@ -31,18 +31,27 @@ IMAGE_PATHS=(Dockerfile app docker-bake.hcl)
 REPO="${GITHUB_REPOSITORY:-netresearch/phpbu-docker}"
 OUT="${GITHUB_OUTPUT:-/dev/stdout}"
 
-emit() { printf '%s=%s\n' "$1" "$2" >> "$OUT"; }
-emit_multi() {
-  local delim
-  delim="EOF_$(od -An -N8 -tx1 /dev/urandom | tr -d ' \n')"
-  { printf '%s<<%s\n' "$1" "$delim"; printf '%s\n' "$2"; printf '%s\n' "$delim"; } >> "$OUT"
+emit() {
+  local key="$1" value="$2"
+  printf '%s=%s\n' "$key" "$value" >> "$OUT"
 }
-skip() { emit release false; emit reason "$1"; echo "No release: $1" >&2; exit 0; }
+emit_multi() {
+  local key="$1" value="$2" delim
+  delim="EOF_$(od -An -N8 -tx1 /dev/urandom | tr -d ' \n')"
+  { printf '%s<<%s\n' "$key" "$delim"; printf '%s\n' "$value"; printf '%s\n' "$delim"; } >> "$OUT"
+}
+skip() {
+  local reason="$1"
+  emit release false
+  emit reason "$reason"
+  echo "No release: $reason" >&2
+  exit 0
+}
 
 head_sha="$(git rev-parse HEAD)"
 
 existing="$(git tag --points-at HEAD | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n1 || true)"
-if [ -n "$existing" ]; then
+if [[ -n "$existing" ]]; then
   # A tag without a release is left behind when the publish job failed after
   # the tag was created. Publish for that tag instead of skipping it, because
   # the next push counts from it.
@@ -61,29 +70,29 @@ ref_minimal=""
 ref_full=""
 while IFS= read -r ref; do
   suffix="${ref##*:"${phpbu}"-}"
-  [ "$suffix" != "$ref" ] || continue
+  [[ "$suffix" != "$ref" ]] || continue
   if [[ "$suffix" =~ ^[0-9a-f]{7,40}$ ]]; then
     ref_minimal="${ref_minimal:-$ref}"
   elif [[ "$suffix" =~ ^full-[0-9a-f]{7,40}$ ]]; then
     ref_full="${ref_full:-$ref}"
   fi
 done <<< "${IMAGE_TAGS:-}"
-[ -n "$ref_minimal" ] || { echo "no <phpbu>-<sha> tag in IMAGE_TAGS" >&2; exit 1; }
-[ -n "$ref_full" ] || { echo "no <phpbu>-full-<sha> tag in IMAGE_TAGS" >&2; exit 1; }
+[[ -n "$ref_minimal" ]] || { echo "no <phpbu>-<sha> tag in IMAGE_TAGS" >&2; exit 1; }
+[[ -n "$ref_full" ]] || { echo "no <phpbu>-full-<sha> tag in IMAGE_TAGS" >&2; exit 1; }
 
 php="${PHP_VERSION:-}"
-if [ -z "$php" ]; then
+if [[ -z "$php" ]]; then
   php="$(docker run --rm --entrypoint php "$ref_minimal" -r 'echo PHP_VERSION;')"
 fi
 [[ "$php" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]] || { echo "unexpected PHP version: $php" >&2; exit 1; }
 
 changes=""
 phpbu_before=""
-if [ -z "$last" ]; then
+if [[ -z "$last" ]]; then
   next="1.0.0"
 else
   mapfile -t commits < <(git log --no-merges --format=%H "$last..HEAD" -- "${IMAGE_PATHS[@]}")
-  [ "${#commits[@]}" -gt 0 ] || skip "no change to ${IMAGE_PATHS[*]} since $last"
+  [[ "${#commits[@]}" -gt 0 ]] || skip "no change to ${IMAGE_PATHS[*]} since $last"
   bump="patch"
   counted=0
   for c in "${commits[@]}"; do
@@ -95,22 +104,23 @@ else
     counted=$((counted + 1))
     if [[ "$subject" =~ ^[a-z]+(\([^\)]*\))?!: ]] || git log -1 --format=%B "$c" | grep -qE '^BREAKING[ -]CHANGE:'; then
       bump="major"
-    elif [[ "$subject" =~ ^feat(\(|:) ]] && [ "$bump" != major ]; then
+    elif [[ "$subject" =~ ^feat(\(|:) ]] && [[ "$bump" != major ]]; then
       bump="minor"
     fi
     changes+="- ${subject} ([${c:0:7}](https://github.com/${REPO}/commit/${c}))"$'\n'
   done
-  [ "$counted" -gt 0 ] || skip "only docs, ci, test or style commits touched ${IMAGE_PATHS[*]} since $last"
+  [[ "$counted" -gt 0 ]] || skip "only docs, ci, test or style commits touched ${IMAGE_PATHS[*]} since $last"
   IFS=. read -r major minor patch <<< "${last#v}"
   case "$bump" in
     major) next="$((major + 1)).0.0" ;;
     minor) next="${major}.$((minor + 1)).0" ;;
     patch) next="${major}.${minor}.$((patch + 1))" ;;
+    *) echo "unknown bump: $bump" >&2; exit 1 ;;
   esac
   phpbu_before="$(git show "$last:app/composer.lock" | jq -r '.packages[] | select(.name == "phpbu/phpbu") | .version')"
 fi
 
-if [ -n "$existing" ]; then
+if [[ -n "$existing" ]]; then
   next="${existing#v}"
   create_tag=false
 else
@@ -120,11 +130,11 @@ fi
 tag="v${next}"
 title="${tag} — phpbu ${phpbu}, PHP ${php}"
 
-if [ -z "$last" ]; then
+if [[ -z "$last" ]]; then
   change_section="First image release with its own version number. Earlier changes are listed in [CHANGELOG.md](https://github.com/${REPO}/blob/${head_sha}/CHANGELOG.md)."
 else
   change_section=""
-  if [ -n "$phpbu_before" ] && [ "$phpbu_before" != "$phpbu" ]; then
+  if [[ -n "$phpbu_before" ]] && [[ "$phpbu_before" != "$phpbu" ]]; then
     change_section="phpbu changed from ${phpbu_before} to [${phpbu}](https://github.com/sebastianfeldmann/phpbu/releases/tag/${phpbu})."$'\n\n'
   fi
   change_section+="Commits since [${last}](https://github.com/${REPO}/releases/tag/${last}) that change the image:"$'\n\n'"${changes%$'\n'}"

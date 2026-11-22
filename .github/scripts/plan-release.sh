@@ -58,9 +58,26 @@ if [[ -n "$existing" ]]; then
   if gh release view "$existing" --repo "$REPO" > /dev/null 2>&1; then
     skip "HEAD already carries the released tag $existing"
   fi
-  last="$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' HEAD^ 2>/dev/null || true)"
-else
-  last="$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' HEAD 2>/dev/null || true)"
+fi
+
+# numbered: the highest version tag below this commit; the next version
+# counts from it. base: the newest of those tags that has a release; the
+# change list and the phpbu comparison start there. They differ when a
+# publish run failed after creating its tag and a later push came first:
+# that tag keeps its number, and its changes move into this release.
+ref="HEAD"
+if [[ -n "$existing" ]]; then
+  ref="HEAD^"
+fi
+numbered="$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' "$ref" 2>/dev/null || true)"
+base=""
+if [[ -n "$numbered" ]]; then
+  while IFS= read -r t; do
+    if gh release view "$t" --repo "$REPO" > /dev/null 2>&1; then
+      base="$t"
+      break
+    fi
+  done < <(git tag --merged "$ref" --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname)
 fi
 
 phpbu="$(jq -re '.packages[] | select(.name == "phpbu/phpbu") | .version' app/composer.lock)"
@@ -88,11 +105,15 @@ fi
 
 changes=""
 phpbu_before=""
-if [[ -z "$last" ]]; then
+if [[ -z "$numbered" ]]; then
   next="1.0.0"
 else
-  mapfile -t commits < <(git log --no-merges --format=%H "$last..HEAD" -- "${IMAGE_PATHS[@]}")
-  [[ "${#commits[@]}" -gt 0 ]] || skip "no change to ${IMAGE_PATHS[*]} since $last"
+  range="HEAD"
+  if [[ -n "$base" ]]; then
+    range="$base..HEAD"
+  fi
+  mapfile -t commits < <(git log --no-merges --format=%H "$range" -- "${IMAGE_PATHS[@]}")
+  [[ "${#commits[@]}" -gt 0 ]] || skip "no change to ${IMAGE_PATHS[*]} since ${base:-the first commit}"
   bump="patch"
   counted=0
   for c in "${commits[@]}"; do
@@ -109,15 +130,17 @@ else
     fi
     changes+="- ${subject} ([${c:0:7}](https://github.com/${REPO}/commit/${c}))"$'\n'
   done
-  [[ "$counted" -gt 0 ]] || skip "only docs, ci, test or style commits touched ${IMAGE_PATHS[*]} since $last"
-  IFS=. read -r major minor patch <<< "${last#v}"
+  [[ "$counted" -gt 0 ]] || skip "only docs, ci, test or style commits touched ${IMAGE_PATHS[*]} since ${base:-the first commit}"
+  IFS=. read -r major minor patch <<< "${numbered#v}"
   case "$bump" in
     major) next="$((major + 1)).0.0" ;;
     minor) next="${major}.$((minor + 1)).0" ;;
     patch) next="${major}.${minor}.$((patch + 1))" ;;
     *) echo "unknown bump: $bump" >&2; exit 1 ;;
   esac
-  phpbu_before="$(git show "$last:app/composer.lock" | jq -r '.packages[] | select(.name == "phpbu/phpbu") | .version')"
+  if [[ -n "$base" ]]; then
+    phpbu_before="$(git show "$base:app/composer.lock" | jq -r '.packages[] | select(.name == "phpbu/phpbu") | .version')"
+  fi
 fi
 
 if [[ -n "$existing" ]]; then
@@ -130,14 +153,14 @@ fi
 tag="v${next}"
 title="${tag} — phpbu ${phpbu}, PHP ${php}"
 
-if [[ -z "$last" ]]; then
+if [[ -z "$base" ]]; then
   change_section="First image release with its own version number. Earlier changes are listed in [CHANGELOG.md](https://github.com/${REPO}/blob/${head_sha}/CHANGELOG.md)."
 else
   change_section=""
   if [[ -n "$phpbu_before" ]] && [[ "$phpbu_before" != "$phpbu" ]]; then
     change_section="phpbu changed from ${phpbu_before} to [${phpbu}](https://github.com/sebastianfeldmann/phpbu/releases/tag/${phpbu})."$'\n\n'
   fi
-  change_section+="Commits since [${last}](https://github.com/${REPO}/releases/tag/${last}) that change the image:"$'\n\n'"${changes%$'\n'}"
+  change_section+="Commits since [${base}](https://github.com/${REPO}/releases/tag/${base}) that change the image:"$'\n\n'"${changes%$'\n'}"
 fi
 
 body="**${tag} is the version of the phpbu-docker image, not of phpbu.** It counts changes to the image: PHP, system packages, PHP dependencies, sync adapters and the entrypoint. The image tags carry the phpbu version, so this release is pulled as \`${phpbu}\` or \`${phpbu}-full\`.

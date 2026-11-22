@@ -16,11 +16,13 @@ WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
 mkdir -p "$WORK/bin"
-# Stub gh: "release view <tag>" succeeds only for the tags in RELEASED.
+# Stub gh: "release view <tag>" succeeds for the tags in RELEASED, and for
+# every tag while RELEASED is unset.
 cat > "$WORK/bin/gh" <<'STUB'
 #!/usr/bin/env bash
 if [[ "$1 $2" = "release view" ]]; then
-  for t in ${RELEASED:-}; do [[ "$t" = "$3" ]] && exit 0; done
+  [[ -z "${RELEASED+set}" ]] && exit 0
+  for t in ${RELEASED}; do [[ "$t" = "$3" ]] && exit 0; done
   exit 1
 fi
 exit 0
@@ -105,7 +107,14 @@ RELEASED=v1.0.0 expect released-at-head false "*already carries the released tag
 
 new_repo tag-without-release
 g tag -a v1.0.0 -m v1.0.0
-expect tag-without-release true v1.0.0 "create_tag=false"
+RELEASED="" expect tag-without-release true v1.0.0 "create_tag=false"
+
+new_repo orphan-behind-head
+g tag -a v1.0.0 -m v1.0.0
+commit Dockerfile -m "fix: change A"
+g tag -a v1.0.1 -m v1.0.1
+commit Dockerfile -m "fix: change B"
+RELEASED=v1.0.0 expect orphan-behind-head true v1.0.2 "- fix: change A"
 
 new_repo fix
 g tag -a v1.0.0 -m v1.0.0

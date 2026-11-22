@@ -118,6 +118,12 @@ jobs:
           docker run --rm --entrypoint which phpbu:ci-full gpg
           docker run --rm --entrypoint which phpbu:ci-full ssh
 
+      - name: Test SFTP sync (full variant)
+        # Uploads a backup to a throwaway SFTP server and reads it back. phpbu
+        # exits 0 when only a sync fails, so the script checks the uploaded file.
+        if: matrix.variant == 'ci-full'
+        run: tests/sftp-sync.sh phpbu:ci-full
+
   # The previous `structure-test` job (inline bake + container-structure-test
   # download + run) now delegates to netresearch/.github's reusable
   # smoke-test-container.yml. The reusable builds via docker/build-push-action

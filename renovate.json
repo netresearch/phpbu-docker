@@ -73,6 +73,26 @@
         "priority:high"
       ],
       "prPriority": 10
+    },
+    {
+      "description": "phpbu 6.0's SFTP sync calls phpseclib\\Net\\SFTP, the namespace of phpseclib 2.x. phpseclib 3 and 4 renamed it, and the sync then fails with 'phpseclib not installed'. Lift this when sebastianfeldmann/phpbu#352 (phpseclib 3 support) ships; tests/sftp-sync.sh checks it.",
+      "matchManagers": [
+        "composer"
+      ],
+      "matchPackageNames": [
+        "phpseclib/phpseclib"
+      ],
+      "allowedVersions": "<3.0.0"
+    },
+    {
+      "description": "kunalvarma05/dropbox-php-sdk 0.5 requires guzzlehttp/guzzle ~6.0|~7.0, so guzzle 8 cannot be installed in the full variant. Lift this when the Dropbox SDK allows guzzle 8.",
+      "matchManagers": [
+        "composer"
+      ],
+      "matchPackageNames": [
+        "guzzlehttp/guzzle"
+      ],
+      "allowedVersions": "<8.0.0"
     }
   ],
   "customManagers": [

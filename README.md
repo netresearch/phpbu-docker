@@ -392,7 +392,7 @@ The repository uses two version numbers:
 | Image release | `v1.0.0` | Changes to the image: PHP, system packages, PHP dependencies, sync adapters, entrypoint | Git tag, [GitHub Releases](https://github.com/netresearch/phpbu-docker/releases) |
 | phpbu version | `6.0.33` | The phpbu release inside the image | Image tags (see above) |
 
-A push to `main` that changes `Dockerfile`, `app/` or `docker-bake.hcl` publishes the next image release automatically. A breaking change raises the major version, a `feat` commit the minor version, and every other image change the patch version. Changes to CI or documentation publish no release, and neither does the weekly rebuild that only picks up Alpine package updates.
+A push to `main` that changes `Dockerfile`, `app/` or `docker-bake.hcl` publishes the next image release automatically; commits typed `docs`, `ci`, `test` or `style` do not count. A breaking change raises the major version, a `feat` commit the minor version, and every other image change the patch version. Changes to CI or documentation publish no release, and neither does the weekly rebuild that only picks up Alpine package updates.
 
 Each release title names both numbers, for example "v1.0.0 — phpbu 6.0.33, PHP 8.6.0". The release lists the commits that changed the image and the immutable tags of exactly that build. To be notified, watch the repository with *Custom → Releases*.
 

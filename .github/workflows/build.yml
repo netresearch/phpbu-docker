@@ -117,11 +117,13 @@ jobs:
         id: plan
         if: steps.tip.outputs.current == 'true'
         env:
+          GH_TOKEN: ${{ github.token }}
           IMAGE_TAGS: ${{ needs.build.outputs.tags }}
         run: .github/scripts/plan-release.sh
 
+      # A tag left by a failed publish run is reused; see plan-release.sh.
       - name: Create the release tag
-        if: steps.plan.outputs.release == 'true'
+        if: steps.plan.outputs.release == 'true' && steps.plan.outputs.create_tag == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.plan.outputs.tag }}

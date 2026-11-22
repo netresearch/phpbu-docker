@@ -2,12 +2,12 @@
 
 [![Build Status](https://github.com/netresearch/phpbu-docker/actions/workflows/build.yml/badge.svg)](https://github.com/netresearch/phpbu-docker/actions/workflows/build.yml)
 [![Container Tests](https://github.com/netresearch/phpbu-docker/actions/workflows/test.yml/badge.svg)](https://github.com/netresearch/phpbu-docker/actions/workflows/test.yml)
-[![Security Scan](https://github.com/netresearch/phpbu-docker/actions/workflows/security.yml/badge.svg)](https://github.com/netresearch/phpbu-docker/actions/workflows/security.yml)
+[![CI](https://github.com/netresearch/phpbu-docker/actions/workflows/ci.yml/badge.svg)](https://github.com/netresearch/phpbu-docker/actions/workflows/ci.yml)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/netresearch/phpbu-docker/badge)](https://securityscorecards.dev/viewer/?uri=github.com/netresearch/phpbu-docker)
 [![SLSA 3](https://slsa.dev/images/gh-badge-level3.svg)](https://slsa.dev)
 [![License: LGPL-3.0](https://img.shields.io/badge/License-LGPL--3.0-blue.svg)](https://opensource.org/licenses/LGPL-3.0)
 
-Production-ready Docker image for [phpbu](https://phpbu.de/) - PHP Backup Utility with comprehensive backup, sync, and cleanup capabilities.
+Production-ready Docker image for [phpbu](https://github.com/sebastianfeldmann/phpbu) - PHP Backup Utility with comprehensive backup, sync, and cleanup capabilities.
 
 ## Image Variants
 
@@ -418,7 +418,6 @@ phpbu itself is created by [Sebastian Feldmann](https://github.com/sebastianfeld
 
 ## Links
 
-- [phpbu Documentation](https://phpbu.de/documentation.html)
-- [phpbu GitHub](https://github.com/sebastianfeldmann/phpbu)
+- [phpbu on GitHub](https://github.com/sebastianfeldmann/phpbu)
 - [Container Registry](https://ghcr.io/netresearch/phpbu-docker)
 - [Security Scorecard](https://securityscorecards.dev/viewer/?uri=github.com/netresearch/phpbu-docker)

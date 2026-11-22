@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+From image release v1.0.0 on, changes are listed in the
+[GitHub Releases](https://github.com/netresearch/phpbu-docker/releases). The
+entries below cover the time before.
+
 ## 2026-02-10
 
 ### Added

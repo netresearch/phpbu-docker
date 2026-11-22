@@ -87,7 +87,7 @@ target "minimal" {
     "type=sbom"
   ]
 
-  # No cache-from/cache-to here: build.yml and release.yml get a GHA cache per
+  # No cache-from/cache-to here: build.yml gets a GHA cache per
   # target from the build-container-bake reusable, which reads none on the
   # weekly rebuild so that `apk upgrade` runs.
 }

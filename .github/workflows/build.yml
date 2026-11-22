@@ -62,3 +62,87 @@ jobs:
           echo "BUILD_DATE=$(date -u +%Y-%m-%d)"
           echo "GIT_SHA=$(git rev-parse --short HEAD)"
         } >> "$GITHUB_ENV"
+
+  # Image release. After a push to main has built and pushed the image, the
+  # plan step (.github/scripts/plan-release.sh) decides whether a commit since
+  # the last v* tag changed the image and, if so, which version follows. The
+  # release version counts image changes; the image tags keep the phpbu
+  # version, so title and body name both. The tag is created through the API
+  # with the job token, which starts no other workflow.
+  release-plan:
+    name: Plan image release
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: image-release
+      cancel-in-progress: false
+    outputs:
+      release: ${{ steps.plan.outputs.release }}
+      tag: ${{ steps.plan.outputs.tag }}
+      title: ${{ steps.plan.outputs.title }}
+      body: ${{ steps.plan.outputs.body }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@aebdcf6156ab6691adf63218240e476564a1ed4c # v2.23.0
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+
+      # A later push already queued behind this one releases the combined
+      # changes; tagging this commit afterwards would put an older commit on a
+      # newer version.
+      - name: Check that this commit is still the tip of main
+        id: tip
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tip="$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)"
+          if [ "$tip" = "$GITHUB_SHA" ]; then
+            echo "current=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "current=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::main moved on to $tip; its run publishes the release"
+          fi
+
+      - name: Plan the release
+        id: plan
+        if: steps.tip.outputs.current == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGE_TAGS: ${{ needs.build.outputs.tags }}
+        run: .github/scripts/plan-release.sh
+
+      # A tag left by a failed publish run is reused; see plan-release.sh.
+      - name: Create the release tag
+        if: steps.plan.outputs.release == 'true' && steps.plan.outputs.create_tag == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.plan.outputs.tag }}
+          TITLE: ${{ steps.plan.outputs.title }}
+        run: |
+          set -euo pipefail
+          tag_sha="$(gh api "repos/$GITHUB_REPOSITORY/git/tags" \
+            -f tag="$TAG" -f message="$TITLE" -f object="$GITHUB_SHA" -f type=commit --jq .sha)"
+          gh api "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/$TAG" -f sha="$tag_sha" --jq .ref
+
+  release:
+    name: Publish image release
+    needs: release-plan
+    if: needs.release-plan.outputs.release == 'true'
+    uses: netresearch/.github/.github/workflows/gh-release-image.yml@main
+    permissions:
+      contents: write
+    with:
+      tag-name: ${{ needs.release-plan.outputs.tag }}
+      title: ${{ needs.release-plan.outputs.title }}
+      body: ${{ needs.release-plan.outputs.body }}
+      generate-release-notes: false
